@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ClearCode</title>
+  <link rel="stylesheet" href="styles/main.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-header">FILES</div>
+        <img src="assets/logo.png" alt="ClearCode" class="sidebar-logo">
+      <div class="file-tree" id="file-tree">
+        <div class="file-item">No folder open</div>
+      </div>
+    </aside>
+    <main class="main">
+      <div class="tab-bar" id="tab-bar">
+        <div class="tab active">untitled</div>
+      </div>
+      <div id="editor"></div>
+    </main>
+    <footer class="status-bar" id="status-bar">
+      <span class="status-item" id="git-branch"></span>
+      <span class="status-item" id="git-status"></span>
+    </footer>
+  </div>
+  <script src="js/bundle.js"></script>
+  <settings-panel id="settings"></settings-panel>
+<script src="components/settings-panel.js"></script>
+<git-panel id="git-panel"></git-panel>
+<script src="components/git-panel.js"></script>
+<shortcuts-panel id="shortcuts-panel"></shortcuts-panel>
+<script src="components/shortcuts-panel.js"></script>
+</body>
+</html>
