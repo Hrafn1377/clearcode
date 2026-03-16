@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="synthwave-2077">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ClearCode — Setup</title>
+  <style>
+    @font-face {
+      font-family: 'Asimovian';
+      src: url('/Asimovian-Regular.ttf') format('truetype');
+      font-weight: normal;
+      font-style: normal;
+      font-display: swap;
+    }
+
+    :root {
+      --bg:           #0d0d1a;
+      --bg-panel:     #12122a;
+      --bg-surface:   #1a1a35;
+      --fg:           #e2e2ff;
+      --fg-muted:     #6b6b8a;
+      --accent-pink:  #ff2079;
+      --accent-cyan:  #00e5ff;
+      --accent-yellow:#ffe600;
+      --accent-purple:#b45fcb;
+      --border:       #2a1f4a;
+      --font-mono:    'Asimovian', 'Fira Code', monospace;
+      --font-ui:      'Asimovian', system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      height: 100dvh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .setup-box {
+      background: var(--bg-panel);
+      border: 1px solid var(--accent-purple);
+      border-radius: 8px;
+      padding: 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 0 40px #b45fcb22;
+    }
+
+    .setup-logo {
+      font-family: var(--font-mono);
+      color: var(--accent-pink);
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-shadow: 0 0 12px var(--accent-pink);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .setup-subtitle {
+      color: var(--fg-muted);
+      font-size: 0.85rem;
+      margin-bottom: 2rem;
+    }
+
+    .errors {
+      background: #ff207922;
+      border: 1px solid var(--accent-pink);
+      border-radius: 4px;
+      padding: 0.75rem;
+      margin-bottom: 1.5rem;
+      font-size: 0.85rem;
+      color: var(--accent-pink);
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--fg-muted);
+      margin-bottom: 0.4rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.6rem 0.75rem;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    input:focus {
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--accent-pink);
+      border: none;
+      border-radius: 4px;
+      padding: 0.75rem;
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      margin-top: 0.5rem;
+      transition: box-shadow 0.2s;
+    }
+
+    .btn-submit:hover {
+      box-shadow: 0 0 16px var(--accent-pink);
+    }
+  </style>
+</head>
+<body>
+  <div class="setup-box">
+    <div class="setup-logo">CLEARCODE</div>
+    <div class="setup-subtitle">First run — create your account to get started.</div>
+
+    <% if @errors&.any? %>
+      <div class="errors">
+        <% @errors.each do |error| %>
+          <div>× <%= error %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%= form_with url: setup_path, method: :post do |f| %>
+      <div class="field">
+        <%= f.label :email, "Email" %>
+        <%= f.email_field :email, autocomplete: "email" %>
+      </div>
+      <div class="field">
+        <%= f.label :password, "Password" %>
+        <%= f.password_field :password, autocomplete: "new-password" %>
+      </div>
+      <div class="field">
+        <%= f.label :password_confirmation, "Confirm Password" %>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
+      </div>
+      <%= f.submit "Get Started →", class: "btn-submit" %>
+    <% end %>
+  </div>
+</body>
+</html>

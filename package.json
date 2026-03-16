@@ -1,0 +1,34 @@
+{
+  "name": "clearcode",
+  "version": "3.0.0",
+  "description": "Accessible code editor. Synthwave soul, colorblind-first design.",
+  "scripts": {
+    "build": "esbuild app/javascript/application.ts --bundle --outdir=app/assets/builds --public-path=/assets --loader:.ttf=file --loader:.woff2=file",
+    "build:css": "esbuild app/javascript/styles/application.css --bundle --outdir=app/assets/builds",
+    "watch": "esbuild app/javascript/application.ts --bundle --outdir=app/assets/builds --watch"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.0.0",
+    "@codemirror/commands": "^6.0.0",
+    "@codemirror/lang-css": "^6.0.0",
+    "@codemirror/lang-html": "^6.0.0",
+    "@codemirror/lang-javascript": "^6.0.0",
+    "@codemirror/lang-json": "^6.0.0",
+    "@codemirror/lang-markdown": "^6.0.0",
+    "@codemirror/lang-python": "^6.0.0",
+    "@codemirror/legacy-modes": "^6.0.0",
+    "@codemirror/lang-rust": "^6.0.0",
+    "@codemirror/lang-sql": "^6.0.0",
+    "@codemirror/language": "^6.0.0",
+    "@codemirror/search": "^6.0.0",
+    "@codemirror/state": "^6.0.0",
+    "@codemirror/theme-one-dark": "^6.0.0",
+    "@codemirror/view": "^6.0.0",
+    "@lezer/highlight": "^1.0.0",
+    "codemirror": "^6.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.20.0",
+    "typescript": "^5.0.0"
+  }
+}
