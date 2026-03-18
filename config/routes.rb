@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  get "version/current"
   devise_for :users
 
   root "editor#index"

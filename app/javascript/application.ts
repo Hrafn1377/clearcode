@@ -8,6 +8,7 @@ import { FileManager } from "./components/file-manager";
 import { SettingsPanel } from "./components/settings-panel";
 import { ProjectManager } from "./components/project-manager";
 import { ProjectSwitcher } from "./components/project-switcher";
+import { checkForUpdates } from "./utils/version-check";
 
 console.log("[ClearCode] script loaded");
 
@@ -64,4 +65,5 @@ if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
 } else {
     boot();
+    checkForUpdates();
 }
