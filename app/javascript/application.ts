@@ -68,6 +68,37 @@ function boot() {
     const gitBtn = document.getElementById("git-btn");
     if (gitBtn) gitBtn.addEventListener("click", () => git.open());
 
+    const focusBtn = document.getElementById("focus-btn");
+    let focusMode = false;
+    if (focusBtn) {
+        focusBtn.addEventListener("click", () => {
+            focusMode = !focusMode;
+            const sidebar = document.getElementById("sidebar");
+            const topbar = document.getElementById("topbar");
+            const statusbar = document.getElementById("statusbar");
+            if (focusMode) {
+                sidebar!.style.display = "none";
+                topbar!.style.display = "none";
+                statusbar!.style.display = "none";
+                document.getElementById("app-shell")!.style.gridTemplateColumns = "1fr";
+                document.getElementById("app-shell")!.style.gridTemplateRows = "1fr";
+            } else {
+                sidebar!.style.display = "";
+                topbar!.style.display = "";
+                statusbar!.style.display = "";
+                document.getElementById("app-shell")!.style.gridTemplateColumns = "";
+                document.getElementById("app-shell")!.style.gridTemplateRows = "";
+            }
+        });
+    }
+
+    // Exit focus mode with Escape
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape" && focusMode) {
+            focusBtn?.click();
+        }
+    });
+
     (window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings };
 }
 
