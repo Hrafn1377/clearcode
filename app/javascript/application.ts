@@ -58,6 +58,9 @@ function boot() {
     const settingsBtn = document.getElementById("settings-btn");
     if (settingsBtn) settingsBtn.addEventListener("click", () => settings.open());
 
+    const gitBtn = document.getElementById("git-btn");
+    if (gitBtn) gitBtn.addEventListener("click", () => git.open());
+
     (window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings };
 }
 
