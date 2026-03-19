@@ -58,6 +58,13 @@ function boot() {
     const settingsBtn = document.getElementById("settings-btn");
     if (settingsBtn) settingsBtn.addEventListener("click", () => settings.open());
 
+   document.addEventListener('keydown', (e) => {
+  if (e.metaKey && e.altKey && e.key === 'f') {
+    e.preventDefault();
+    editor.format();
+  }
+});
+
     const gitBtn = document.getElementById("git-btn");
     if (gitBtn) gitBtn.addEventListener("click", () => git.open());
 

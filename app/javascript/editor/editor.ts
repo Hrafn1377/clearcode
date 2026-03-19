@@ -7,6 +7,7 @@ import { indentOnInput, bracketMatching, foldGutter } from "@codemirror/language
 import { javascript } from "@codemirror/lang-javascript";
 import type { ThemeManager } from "../themes/theme-manager";
 import { detectLanguage } from "../utils/language-detect";
+import { formatCode } from "../utils/prettifier";
 
 const langCompartment = new Compartment();
 const themeCompartment = new Compartment();
@@ -48,6 +49,7 @@ export class ClearCodeEditor {
                 ...historyKeymap,
                 ...searchKeymap,
                 ...completionKeymap,
+                { key: "Cmd-Alt-f", run: () => { this.format(); return true; } },
             ]),
             langCompartment.of(javascript()),
             themeCompartment.of(this.themeManager.currentExtension()),
@@ -94,5 +96,16 @@ export class ClearCodeEditor {
 
     setFontSize(size: number): void {
         this.view.dom.style.fontSize = `${size}px`;
+    }
+
+    async format(): Promise<void> {
+        console.log("[ClearCode] format called");
+        const language = this.themeManager ?
+        (document.getElementById('status-lang')?.textContent ?? 'plaintext') : 'plaintext';
+        const content = this.getContent();
+        const formatted = await formatCode(content, language);
+        if (formatted !== content) {
+            this.setContent(formatted);
+        }
     }
 }
