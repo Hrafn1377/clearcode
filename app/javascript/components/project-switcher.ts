@@ -168,6 +168,7 @@ export class ProjectSwitcher {
                 ${p.description ? `<div class="project-meta">${p.description}</div>` : ''}
               </div>
               <div class="project-actions">
+                <button class="project-action-btn btn-export-project" data-id="${p.id}" title="Export as zip">⬇</button>
                 <button class="project-action-btn btn-delete-project" data-id="${p.id}" title="Delete">✕</button>
               </div>
             </div>
@@ -193,6 +194,14 @@ export class ProjectSwitcher {
         this.close();
       });
     });
+
+    this.modal.querySelectorAll('.btn-export-project').forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const id = parseInt((btn as HTMLElement).dataset.id!);
+    window.location.href = `/projects/${id}/export`;
+  });
+});
 
     this.modal.querySelectorAll('.btn-delete-project').forEach(btn => {
       btn.addEventListener('click', async (e) => {

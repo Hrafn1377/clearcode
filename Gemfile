@@ -22,3 +22,4 @@ end
 group :development do
   gem "web-console"
 end
+gem "rubyzip", "~> 3.2"
