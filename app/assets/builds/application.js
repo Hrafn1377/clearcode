@@ -75002,6 +75002,7 @@ ${e}`;
                 ${p4.description ? `<div class="project-meta">${p4.description}</div>` : ""}
               </div>
               <div class="project-actions">
+                <button class="project-action-btn btn-export-project" data-id="${p4.id}" title="Export as zip">\u2B07</button>
                 <button class="project-action-btn btn-delete-project" data-id="${p4.id}" title="Delete">\u2715</button>
               </div>
             </div>
@@ -75023,6 +75024,13 @@ ${e}`;
           await this.manager.openProject(project);
           this.onSelect?.(project);
           this.close();
+        });
+      });
+      this.modal.querySelectorAll(".btn-export-project").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id3 = parseInt(btn.dataset.id);
+          window.location.href = `/projects/${id3}/export`;
         });
       });
       this.modal.querySelectorAll(".btn-delete-project").forEach((btn) => {
