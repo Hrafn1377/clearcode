@@ -30831,6 +30831,9 @@
         effects: themeCompartment.reconfigure(extension)
       });
     }
+    setFontSize(size) {
+      this.view.dom.style.fontSize = `${size}px`;
+    }
   };
 
   // app/javascript/themes/synthwave-2077.ts
@@ -31862,6 +31865,10 @@
       this.sidebar = document.getElementById("sidebar");
       this.statusLang = document.getElementById("status-lang");
       this.bindKeyboard();
+      setInterval(() => {
+        if (this.currentFile)
+          this.saveCurrentFile();
+      }, 5 * 60 * 1e3);
     }
     setProjectFilter(projectId) {
       this.projectFilter = projectId;
@@ -31911,6 +31918,20 @@
         },
         body: JSON.stringify({ code_file: { content: content2 } })
       });
+      this.showSavedFeedback();
+    }
+    showSavedFeedback() {
+      console.log("[ClearCode] showSavedFeedback called");
+      const el = document.getElementById("status-cursor");
+      if (!el)
+        return;
+      const original = el.textContent;
+      el.textContent = "\u2713 Saved";
+      el.style.color = "var(--accent-cyan)";
+      setTimeout(() => {
+        el.textContent = original;
+        el.style.color = "";
+      }, 3e3);
     }
     async deleteFile(id2) {
       await fetch(`/code_files/${id2}`, {
@@ -32259,8 +32280,11 @@
         this.save({ theme: themeSelect.value });
       };
       fontRange.oninput = () => {
+        const size = parseInt(fontRange.value);
         fontValue.textContent = fontRange.value;
-        this.save({ font_size: parseInt(fontRange.value) });
+        document.documentElement.style.setProperty("--font-size", `${fontRange.value}px`);
+        window.__clearcode?.editor?.setFontSize(size);
+        this.save({ font_size: size });
       };
       dyslexiaCheck.onchange = () => this.save({ dyslexia_mode: dyslexiaCheck.checked });
       voiceSelect.onchange = () => this.tts.setVoice(voiceSelect.value);

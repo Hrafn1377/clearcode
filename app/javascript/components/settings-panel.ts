@@ -242,8 +242,11 @@ export class SettingsPanel {
       this.save({ theme: themeSelect.value });
     };
     fontRange.oninput = () => {
+      const size = parseInt(fontRange.value);
       fontValue.textContent = fontRange.value;
-      this.save({ font_size: parseInt(fontRange.value) });
+      document.documentElement.style.setProperty('--font-size', `${fontRange.value}px`);
+      (window as any).__clearcode?.editor?.setFontSize(size);
+      this.save({ font_size: size });
     };
     dyslexiaCheck.onchange = () => this.save({ dyslexia_mode: dyslexiaCheck.checked });
     voiceSelect.onchange = () => this.tts.setVoice(voiceSelect.value);

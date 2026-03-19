@@ -25,6 +25,9 @@ export class FileManager {
     this.sidebar = document.getElementById("sidebar");
     this.statusLang = document.getElementById("status-lang");
     this.bindKeyboard();
+    setInterval(() => {
+      if (this.currentFile) this.saveCurrentFile();
+    }, 5 * 60 * 1000);
   }
   setProjectFilter(projectId: number | null): void {
     this.projectFilter = projectId;
@@ -78,7 +81,21 @@ export class FileManager {
       },
       body: JSON.stringify({ code_file: { content } }),
     });
+    this.showSavedFeedback();
   }
+
+  private showSavedFeedback(): void {
+    console.log("[ClearCode] showSavedFeedback called");
+  const el = document.getElementById("status-cursor");
+  if (!el) return;
+  const original = el.textContent;
+  el.textContent = "✓ Saved";
+  el.style.color = "var(--accent-cyan)";
+  setTimeout(() => {
+    el.textContent = original;
+    el.style.color = "";
+  }, 3000);
+}
 
   async deleteFile(id: number): Promise<void> {
     await fetch(`/code_files/${id}`, {

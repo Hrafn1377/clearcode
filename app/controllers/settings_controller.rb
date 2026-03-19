@@ -8,7 +8,7 @@ class SettingsController < ApplicationController
     def update
         current_user.update!(settings_params)
         render json: current_user.settings
-    rescue ActiveRecord::RecordInvalid => e2e2ff
+    rescue ActiveRecord::RecordInvalid => e
         render json: { error: e.message }, status: :unprocessable_entity
     end
 

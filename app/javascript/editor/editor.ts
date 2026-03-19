@@ -91,4 +91,8 @@ export class ClearCodeEditor {
             effects: themeCompartment.reconfigure(extension),
         });
     }
+
+    setFontSize(size: number): void {
+        this.view.dom.style.fontSize = `${size}px`;
+    }
 }
