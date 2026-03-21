@@ -74421,6 +74421,7 @@ ${e}`;
       this.sidebar.innerHTML = `
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
+        <button class="btn-save" id="btn-save-file">\u2193 Save</button>
       </div>
       <ul class="file-list">
         ${this.files.map((f7) => `
@@ -74435,6 +74436,9 @@ ${e}`;
         const name2 = prompt("File name (e.g. index.ts):");
         if (name2)
           this.newFile(name2);
+      });
+      document.getElementById("btn-save-file")?.addEventListener("click", () => {
+        this.saveCurrentFile();
       });
       this.sidebar.querySelectorAll(".file-item .file-name").forEach((el5) => {
         el5.addEventListener("click", () => {
@@ -74717,6 +74721,7 @@ ${e}`;
       fontRange.value = data2.font_size ?? "14";
       fontValue.textContent = fontRange.value;
       dyslexiaCheck.checked = data2.dyslexia_mode ?? false;
+      document.documentElement.setAttribute("data-dyslexia", String(data2.dyslexia_mode ?? false));
       rateRange.value = String(this.tts.getRate());
       rateValue.textContent = String(this.tts.getRate());
       const voices = this.tts.getVoices();
@@ -74737,7 +74742,10 @@ ${e}`;
         window.__clearcode?.editor?.setFontSize(size);
         this.save({ font_size: size });
       };
-      dyslexiaCheck.onchange = () => this.save({ dyslexia_mode: dyslexiaCheck.checked });
+      dyslexiaCheck.onchange = () => {
+        document.documentElement.setAttribute("data-dyslexia", String(dyslexiaCheck.checked));
+        this.save({ dyslexia_mode: dyslexiaCheck.checked });
+      };
       voiceSelect.onchange = () => this.tts.setVoice(voiceSelect.value);
       rateRange.oninput = () => {
         rateValue.textContent = rateRange.value;

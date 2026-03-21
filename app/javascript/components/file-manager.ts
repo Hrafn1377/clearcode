@@ -134,6 +134,7 @@ export class FileManager {
     this.sidebar.innerHTML = `
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
+        <button class="btn-save" id="btn-save-file">↓ Save</button>
       </div>
       <ul class="file-list">
         ${this.files.map(f => `
@@ -148,6 +149,10 @@ export class FileManager {
     document.getElementById("btn-new-file")?.addEventListener("click", () => {
       const name = prompt("File name (e.g. index.ts):");
       if (name) this.newFile(name);
+    });
+
+    document.getElementById("btn-save-file")?.addEventListener("click", () => {
+      this.saveCurrentFile();
     });
 
     this.sidebar.querySelectorAll(".file-item .file-name").forEach(el => {

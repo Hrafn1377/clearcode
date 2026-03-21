@@ -224,6 +224,7 @@ export class SettingsPanel {
     fontRange.value = data.font_size ?? '14';
     fontValue.textContent = fontRange.value;
     dyslexiaCheck.checked = data.dyslexia_mode ?? false;
+    document.documentElement.setAttribute('data-dyslexia', String(data.dyslexia_mode ?? false));
 
     rateRange.value = String(this.tts.getRate());
     rateValue.textContent = String(this.tts.getRate());
@@ -248,7 +249,10 @@ export class SettingsPanel {
       (window as any).__clearcode?.editor?.setFontSize(size);
       this.save({ font_size: size });
     };
-    dyslexiaCheck.onchange = () => this.save({ dyslexia_mode: dyslexiaCheck.checked });
+    dyslexiaCheck.onchange = () => {
+      document.documentElement.setAttribute('data-dyslexia', String(dyslexiaCheck.checked));
+      this.save({ dyslexia_mode: dyslexiaCheck.checked });
+};
     voiceSelect.onchange = () => this.tts.setVoice(voiceSelect.value);
     rateRange.oninput = () => {
       rateValue.textContent = rateRange.value;
