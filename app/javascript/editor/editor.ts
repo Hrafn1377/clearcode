@@ -8,6 +8,7 @@ import { javascript } from "@codemirror/lang-javascript";
 import type { ThemeManager } from "../themes/theme-manager";
 import { detectLanguage } from "../utils/language-detect";
 import { formatCode } from "../utils/prettifier";
+import { jsLinter } from "../utils/linter";
 
 const langCompartment = new Compartment();
 const themeCompartment = new Compartment();
@@ -62,6 +63,7 @@ export class ClearCodeEditor {
                     if (statusCursor) statusCursor.textContent = `Ln ${line.number}, Col ${col}`;    
                 }
             }),
+            jsLinter(),
             EditorView.lineWrapping,
         ];
     }

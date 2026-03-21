@@ -20,12 +20,17 @@
     "@codemirror/lang-sql": "^6.0.0",
     "@codemirror/language": "^6.0.0",
     "@codemirror/legacy-modes": "^6.0.0",
+    "@codemirror/lint": "^6.9.5",
     "@codemirror/search": "^6.0.0",
     "@codemirror/state": "^6.0.0",
     "@codemirror/theme-one-dark": "^6.0.0",
     "@codemirror/view": "^6.0.0",
     "@lezer/highlight": "^1.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.57.1",
+    "@typescript-eslint/parser": "^8.57.1",
     "codemirror": "^6.0.0",
+    "eslint": "^10.1.0",
+    "eslint-linter-browserify": "^10.1.0",
     "prettier": "^3.8.1"
   },
   "devDependencies": {
