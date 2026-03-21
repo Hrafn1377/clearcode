@@ -11,7 +11,7 @@ gem "jbuilder"
 gem "devise"
 gem "tzinfo-data", platforms: %i[windows jruby]
 gem "bootsnap", require: false
-get "thruster", require: false
+gem "thruster", require: false
 
 # Asset pipeline
 gem "propshaft"                  # modern, no sprockets
