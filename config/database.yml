@@ -5,11 +5,11 @@ default: &default
 
 development:
   <<: *default
-  databse: storage/development.sqlite3
+  database: storage/development.sqlite3
 
 test:
   <<: *default
-  databse: storage/test.sqlite3
+  database: storage/test.sqlite3
 
 production:
   adapter: postgresql
