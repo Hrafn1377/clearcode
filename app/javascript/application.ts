@@ -37,6 +37,7 @@ function boot() {
     new TutorialSystem();
 
     fileManager.loadFiles();
+    editor.setOnUpdate(() => preview.update());
 
     // Restore last project on load
     const lastProjectId = projectManager.getPersistedProjectId();
@@ -65,6 +66,14 @@ function boot() {
 
     const settingsBtn = document.getElementById("settings-btn");
     if (settingsBtn) settingsBtn.addEventListener("click", () => settings.open());
+
+    const previewBtn = document.getElementById("preview-btn");
+    if (previewBtn) {
+        previewBtn.addEventListener("click", () => {
+            preview.toggle();
+            previewBtn.style.color = preview.isActive() ? 'var(--accent-cyan)' : '';
+        });
+    }
 
    document.addEventListener('keydown', (e) => {
   if (e.metaKey && e.altKey && e.key === 'f') {

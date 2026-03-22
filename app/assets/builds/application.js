@@ -73989,6 +73989,7 @@ ${e}`;
   var ClearCodeEditor = class {
     view;
     themeManager;
+    onUpdateCallback = null;
     constructor(host, themeManager) {
       this.themeManager = themeManager;
       const state = EditorState.create({
@@ -74034,6 +74035,8 @@ ${e}`;
             if (statusCursor)
               statusCursor.textContent = `Ln ${line.number}, Col ${col}`;
           }
+          if (update.docChanged && this.onUpdateCallback)
+            this.onUpdateCallback();
         }),
         jsLinter(),
         EditorView.lineWrapping
@@ -74065,6 +74068,9 @@ ${e}`;
     }
     setFontSize(size) {
       this.view.dom.style.fontSize = `${size}px`;
+    }
+    setOnUpdate(fn5) {
+      this.onUpdateCallback = fn5;
     }
     async format() {
       console.log("[ClearCode] format called");
@@ -75213,14 +75219,35 @@ ${e}`;
     editor;
     frame = null;
     debounceTimer = null;
+    active = false;
     constructor(editor) {
       this.editor = editor;
       this.frame = document.getElementById("preview-frame");
     }
+    toggle() {
+      if (this.active) {
+        this.disable();
+      } else {
+        this.enable();
+      }
+    }
+    isActive() {
+      return this.active;
+    }
     enable() {
-      this.update();
+      if (!this.frame)
+        return;
+      this.active = true;
+      this.frame.style.display = "block";
+      const btn = document.getElementById("preview-btn");
+      if (btn) {
+        btn.style.color = "var(--accent-green)";
+      }
+      this.render();
     }
     update() {
+      if (!this.active)
+        return;
       if (this.debounceTimer)
         clearTimeout(this.debounceTimer);
       this.debounceTimer = setTimeout(() => this.render(), 300);
@@ -75237,8 +75264,16 @@ ${e}`;
       doc2.close();
     }
     disable() {
+      if (!this.frame)
+        return;
+      this.active = false;
+      this.frame.style.display = "none";
       if (this.debounceTimer)
         clearTimeout(this.debounceTimer);
+      const btn = document.getElementById("preview-btn");
+      if (btn) {
+        btn.style.color = "";
+      }
     }
   };
 
@@ -76398,6 +76433,7 @@ ${code}
     );
     new TutorialSystem();
     fileManager.loadFiles();
+    editor.setOnUpdate(() => preview.update());
     const lastProjectId = projectManager.getPersistedProjectId();
     projectManager.setOnProjectChange((project) => {
       const label = document.getElementById("current-project-label");
@@ -76424,6 +76460,13 @@ ${code}
     const settingsBtn = document.getElementById("settings-btn");
     if (settingsBtn)
       settingsBtn.addEventListener("click", () => settings.open());
+    const previewBtn = document.getElementById("preview-btn");
+    if (previewBtn) {
+      previewBtn.addEventListener("click", () => {
+        preview.toggle();
+        previewBtn.style.color = preview.isActive() ? "var(--accent-cyan)" : "";
+      });
+    }
     document.addEventListener("keydown", (e) => {
       if (e.metaKey && e.altKey && e.key === "f") {
         e.preventDefault();

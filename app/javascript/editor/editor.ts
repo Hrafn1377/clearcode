@@ -16,6 +16,7 @@ const themeCompartment = new Compartment();
 export class ClearCodeEditor {
     private view: EditorView;
     private themeManager: ThemeManager;
+    private onUpdateCallback: (() => void) | null = null;
 
     constructor(host: HTMLElement, themeManager: ThemeManager) {
         this.themeManager = themeManager;
@@ -62,6 +63,7 @@ export class ClearCodeEditor {
                     const statusCursor = document.getElementById("status-cursor");
                     if (statusCursor) statusCursor.textContent = `Ln ${line.number}, Col ${col}`;    
                 }
+                if (update.docChanged && this.onUpdateCallback) this.onUpdateCallback();
             }),
             jsLinter(),
             EditorView.lineWrapping,
@@ -98,6 +100,10 @@ export class ClearCodeEditor {
 
     setFontSize(size: number): void {
         this.view.dom.style.fontSize = `${size}px`;
+    }
+
+    setOnUpdate(fn: () => void): void {
+        this.onUpdateCallback = fn;
     }
 
     async format(): Promise<void> {

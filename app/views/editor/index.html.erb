@@ -6,6 +6,7 @@
   </button>
   <button id="git-btn" title="Git">Git</button>
   <button id="ai-btn" title="AI Assistant">✦ AI</button>
+  <button id="preview-btn" title="Live Preview">⬡ Preview</button>
   <button id="focus-btn" title="Focus Mode">⊡</button>
   <button id="settings-btn" title="Settings">⚙</button>
 </div>
@@ -13,7 +14,11 @@
   <div id="sidebar">
   </div>
 
-  <div id="editor-host"></div>
+  <div id="editor-preview-container">
+    <div id="editor-host"></div>
+    <iframe id="preview-frame" style="display:none; border:none; background:white;"></iframe>
+  </div>
+
 
   <div id="statusbar">
     <span id="status-lang">plaintext</span>
