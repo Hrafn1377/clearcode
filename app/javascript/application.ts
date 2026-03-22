@@ -9,6 +9,7 @@ import { SettingsPanel } from "./components/settings-panel";
 import { ProjectManager } from "./components/project-manager";
 import { ProjectSwitcher } from "./components/project-switcher";
 import { checkForUpdates } from "./utils/version-check";
+import { AIPanel } from "./components/ai-panel";
 
 console.log("[ClearCode] script loaded");
 
@@ -26,6 +27,13 @@ function boot() {
     const projectSwitcher = new ProjectSwitcher(projectManager);
     const fileManager = new FileManager(editor);
     const settings = new SettingsPanel(themeManager, tts);
+    const aiPanel = new AIPanel(
+      () => {
+        const key = document.getElementById('settings-api-key') as HTMLInputElement;
+        return key?.value ?? '';
+      },
+      () => editor.getContent()
+    );  
     new TutorialSystem();
 
     fileManager.loadFiles();
@@ -67,6 +75,9 @@ function boot() {
 
     const gitBtn = document.getElementById("git-btn");
     if (gitBtn) gitBtn.addEventListener("click", () => git.open());
+
+    const aiBtn = document.getElementById("ai-btn");
+    if (aiBtn) aiBtn.addEventListener("click", () => aiPanel.open());
 
     const focusBtn = document.getElementById("focus-btn");
     let focusMode = false;
