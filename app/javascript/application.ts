@@ -11,6 +11,7 @@ import { ProjectSwitcher } from "./components/project-switcher";
 import { checkForUpdates } from "./utils/version-check";
 import { AIPanel } from "./components/ai-panel";
 import { PaletteEditor } from "./components/palette-editor";
+import { SplitPane } from "./components/split-pane";
 
 console.log("[ClearCode] script loaded");
 
@@ -24,6 +25,7 @@ function boot() {
     const tts = new TTSController(editor);
     const git = new GitPanel();
     const preview = new LivePreview(editor);
+    const splitPane = new SplitPane(themeManager);
     const projectManager = new ProjectManager();
     const projectSwitcher = new ProjectSwitcher(projectManager);
     const fileManager = new FileManager(editor);
@@ -76,6 +78,15 @@ function boot() {
             previewBtn.style.color = preview.isActive() ? 'var(--accent-cyan)' : '';
         });
     }
+
+    const splitBtn = document.getElementById("split-btn");
+if (splitBtn) {
+  splitBtn.addEventListener("click", () => {
+    splitPane.toggle();
+    splitBtn.style.color = splitPane.isActive() ? 'var(--accent-cyan)' : '';
+  });
+}
+
 
    document.addEventListener('keydown', (e) => {
   if (e.metaKey && e.altKey && e.key === 'f') {
