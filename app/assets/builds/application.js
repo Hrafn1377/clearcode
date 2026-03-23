@@ -1327,11 +1327,11 @@
     /**
     Extend this range to cover at least `from` to `to`.
     */
-    extend(from, to4 = from) {
+    extend(from, to4 = from, assoc = 0) {
       if (from <= this.anchor && to4 >= this.anchor)
-        return EditorSelection.range(from, to4);
+        return EditorSelection.range(from, to4, void 0, void 0, assoc);
       let head = Math.abs(from - this.anchor) > Math.abs(to4 - this.anchor) ? from : to4;
-      return EditorSelection.range(this.anchor, head);
+      return EditorSelection.range(this.anchor, head, void 0, void 0, assoc);
     }
     /**
     Compare this range to another range.
@@ -1465,9 +1465,11 @@
     /**
     Create a selection range.
     */
-    static range(anchor, head, goalColumn, bidiLevel) {
+    static range(anchor, head, goalColumn, bidiLevel, assoc) {
       let flags = (goalColumn !== null && goalColumn !== void 0 ? goalColumn : 16777215) << 6 | (bidiLevel == null ? 7 : Math.min(6, bidiLevel));
-      return head < anchor ? SelectionRange.create(head, anchor, 32 | 16 | flags) : SelectionRange.create(anchor, head, (head > anchor ? 8 : 0) | flags);
+      if (!assoc && anchor != head)
+        assoc = head < anchor ? 1 : -1;
+      return head < anchor ? SelectionRange.create(head, anchor, 32 | 16 | flags) : SelectionRange.create(anchor, head, (!assoc ? 0 : assoc < 0 ? 8 : 16) | flags);
     }
     /**
     @internal
@@ -2967,8 +2969,8 @@
         return _RangeSet.empty;
       let result = sets[sets.length - 1];
       for (let i = sets.length - 2; i >= 0; i--) {
-        for (let layer = sets[i]; layer != _RangeSet.empty; layer = layer.nextLayer)
-          result = new _RangeSet(layer.chunkPos, layer.chunk, result, Math.max(layer.maxPoint, result.maxPoint));
+        for (let layer2 = sets[i]; layer2 != _RangeSet.empty; layer2 = layer2.nextLayer)
+          result = new _RangeSet(layer2.chunkPos, layer2.chunk, result, Math.max(layer2.maxPoint, result.maxPoint));
       }
       return result;
     }
@@ -3099,8 +3101,8 @@
     return shared;
   }
   var LayerCursor = class {
-    constructor(layer, skip, minPoint, rank = 0) {
-      this.layer = layer;
+    constructor(layer2, skip, minPoint, rank = 0) {
+      this.layer = layer2;
       this.skip = skip;
       this.minPoint = minPoint;
       this.rank = rank;
@@ -12017,6 +12019,333 @@
     currentKeyEvent = null;
     return handled;
   }
+  var RectangleMarker = class _RectangleMarker {
+    /**
+    Create a marker with the given class and dimensions. If `width`
+    is null, the DOM element will get no width style.
+    */
+    constructor(className, left, top2, width, height) {
+      this.className = className;
+      this.left = left;
+      this.top = top2;
+      this.width = width;
+      this.height = height;
+    }
+    draw() {
+      let elt2 = document.createElement("div");
+      elt2.className = this.className;
+      this.adjust(elt2);
+      return elt2;
+    }
+    update(elt2, prev) {
+      if (prev.className != this.className)
+        return false;
+      this.adjust(elt2);
+      return true;
+    }
+    adjust(elt2) {
+      elt2.style.left = this.left + "px";
+      elt2.style.top = this.top + "px";
+      if (this.width != null)
+        elt2.style.width = this.width + "px";
+      elt2.style.height = this.height + "px";
+    }
+    eq(p4) {
+      return this.left == p4.left && this.top == p4.top && this.width == p4.width && this.height == p4.height && this.className == p4.className;
+    }
+    /**
+    Create a set of rectangles for the given selection range,
+    assigning them theclass`className`. Will create a single
+    rectangle for empty ranges, and a set of selection-style
+    rectangles covering the range's content (in a bidi-aware
+    way) for non-empty ones.
+    */
+    static forRange(view, className, range) {
+      if (range.empty) {
+        let pos = view.coordsAtPos(range.head, range.assoc || 1);
+        if (!pos)
+          return [];
+        let base2 = getBase(view);
+        return [new _RectangleMarker(className, pos.left - base2.left, pos.top - base2.top, null, pos.bottom - pos.top)];
+      } else {
+        return rectanglesForRange(view, className, range);
+      }
+    }
+  };
+  function getBase(view) {
+    let rect = view.scrollDOM.getBoundingClientRect();
+    let left = view.textDirection == Direction.LTR ? rect.left : rect.right - view.scrollDOM.clientWidth * view.scaleX;
+    return { left: left - view.scrollDOM.scrollLeft * view.scaleX, top: rect.top - view.scrollDOM.scrollTop * view.scaleY };
+  }
+  function wrappedLine(view, pos, side, inside) {
+    let coords = view.coordsAtPos(pos, side * 2);
+    if (!coords)
+      return inside;
+    let editorRect = view.dom.getBoundingClientRect();
+    let y7 = (coords.top + coords.bottom) / 2;
+    let left = view.posAtCoords({ x: editorRect.left + 1, y: y7 });
+    let right = view.posAtCoords({ x: editorRect.right - 1, y: y7 });
+    if (left == null || right == null)
+      return inside;
+    return { from: Math.max(inside.from, Math.min(left, right)), to: Math.min(inside.to, Math.max(left, right)) };
+  }
+  function rectanglesForRange(view, className, range) {
+    if (range.to <= view.viewport.from || range.from >= view.viewport.to)
+      return [];
+    let from = Math.max(range.from, view.viewport.from), to4 = Math.min(range.to, view.viewport.to);
+    let ltr = view.textDirection == Direction.LTR;
+    let content2 = view.contentDOM, contentRect = content2.getBoundingClientRect(), base2 = getBase(view);
+    let lineElt = content2.querySelector(".cm-line"), lineStyle = lineElt && window.getComputedStyle(lineElt);
+    let leftSide = contentRect.left + (lineStyle ? parseInt(lineStyle.paddingLeft) + Math.min(0, parseInt(lineStyle.textIndent)) : 0);
+    let rightSide = contentRect.right - (lineStyle ? parseInt(lineStyle.paddingRight) : 0);
+    let startBlock = blockAt(view, from, 1), endBlock = blockAt(view, to4, -1);
+    let visualStart = startBlock.type == BlockType.Text ? startBlock : null;
+    let visualEnd = endBlock.type == BlockType.Text ? endBlock : null;
+    if (visualStart && (view.lineWrapping || startBlock.widgetLineBreaks))
+      visualStart = wrappedLine(view, from, 1, visualStart);
+    if (visualEnd && (view.lineWrapping || endBlock.widgetLineBreaks))
+      visualEnd = wrappedLine(view, to4, -1, visualEnd);
+    if (visualStart && visualEnd && visualStart.from == visualEnd.from && visualStart.to == visualEnd.to) {
+      return pieces(drawForLine(range.from, range.to, visualStart));
+    } else {
+      let top2 = visualStart ? drawForLine(range.from, null, visualStart) : drawForWidget(startBlock, false);
+      let bottom = visualEnd ? drawForLine(null, range.to, visualEnd) : drawForWidget(endBlock, true);
+      let between = [];
+      if ((visualStart || startBlock).to < (visualEnd || endBlock).from - (visualStart && visualEnd ? 1 : 0) || startBlock.widgetLineBreaks > 1 && top2.bottom + view.defaultLineHeight / 2 < bottom.top)
+        between.push(piece(leftSide, top2.bottom, rightSide, bottom.top));
+      else if (top2.bottom < bottom.top && view.elementAtHeight((top2.bottom + bottom.top) / 2).type == BlockType.Text)
+        top2.bottom = bottom.top = (top2.bottom + bottom.top) / 2;
+      return pieces(top2).concat(between).concat(pieces(bottom));
+    }
+    function piece(left, top2, right, bottom) {
+      return new RectangleMarker(className, left - base2.left, top2 - base2.top, Math.max(0, right - left), bottom - top2);
+    }
+    function pieces({ top: top2, bottom, horizontal }) {
+      let pieces2 = [];
+      for (let i = 0; i < horizontal.length; i += 2)
+        pieces2.push(piece(horizontal[i], top2, horizontal[i + 1], bottom));
+      return pieces2;
+    }
+    function drawForLine(from2, to5, line) {
+      let top2 = 1e9, bottom = -1e9, horizontal = [];
+      function addSpan(from3, fromOpen, to6, toOpen, dir) {
+        let fromCoords = view.coordsAtPos(from3, from3 == line.to ? -2 : 2);
+        let toCoords = view.coordsAtPos(to6, to6 == line.from ? 2 : -2);
+        if (!fromCoords || !toCoords)
+          return;
+        top2 = Math.min(fromCoords.top, toCoords.top, top2);
+        bottom = Math.max(fromCoords.bottom, toCoords.bottom, bottom);
+        if (dir == Direction.LTR)
+          horizontal.push(ltr && fromOpen ? leftSide : fromCoords.left, ltr && toOpen ? rightSide : toCoords.right);
+        else
+          horizontal.push(!ltr && toOpen ? leftSide : toCoords.left, !ltr && fromOpen ? rightSide : fromCoords.right);
+      }
+      let start = from2 !== null && from2 !== void 0 ? from2 : line.from, end = to5 !== null && to5 !== void 0 ? to5 : line.to;
+      for (let r5 of view.visibleRanges)
+        if (r5.to > start && r5.from < end) {
+          for (let pos = Math.max(r5.from, start), endPos = Math.min(r5.to, end); ; ) {
+            let docLine = view.state.doc.lineAt(pos);
+            for (let span of view.bidiSpans(docLine)) {
+              let spanFrom = span.from + docLine.from, spanTo = span.to + docLine.from;
+              if (spanFrom >= endPos)
+                break;
+              if (spanTo > pos)
+                addSpan(Math.max(spanFrom, pos), from2 == null && spanFrom <= start, Math.min(spanTo, endPos), to5 == null && spanTo >= end, span.dir);
+            }
+            pos = docLine.to + 1;
+            if (pos >= endPos)
+              break;
+          }
+        }
+      if (horizontal.length == 0)
+        addSpan(start, from2 == null, end, to5 == null, view.textDirection);
+      return { top: top2, bottom, horizontal };
+    }
+    function drawForWidget(block, top2) {
+      let y7 = contentRect.top + (top2 ? block.top : block.bottom);
+      return { top: y7, bottom: y7, horizontal: [] };
+    }
+  }
+  function sameMarker(a5, b7) {
+    return a5.constructor == b7.constructor && a5.eq(b7);
+  }
+  var LayerView = class {
+    constructor(view, layer2) {
+      this.view = view;
+      this.layer = layer2;
+      this.drawn = [];
+      this.scaleX = 1;
+      this.scaleY = 1;
+      this.measureReq = { read: this.measure.bind(this), write: this.draw.bind(this) };
+      this.dom = view.scrollDOM.appendChild(document.createElement("div"));
+      this.dom.classList.add("cm-layer");
+      if (layer2.above)
+        this.dom.classList.add("cm-layer-above");
+      if (layer2.class)
+        this.dom.classList.add(layer2.class);
+      this.scale();
+      this.dom.setAttribute("aria-hidden", "true");
+      this.setOrder(view.state);
+      view.requestMeasure(this.measureReq);
+      if (layer2.mount)
+        layer2.mount(this.dom, view);
+    }
+    update(update) {
+      if (update.startState.facet(layerOrder) != update.state.facet(layerOrder))
+        this.setOrder(update.state);
+      if (this.layer.update(update, this.dom) || update.geometryChanged) {
+        this.scale();
+        update.view.requestMeasure(this.measureReq);
+      }
+    }
+    docViewUpdate(view) {
+      if (this.layer.updateOnDocViewUpdate !== false)
+        view.requestMeasure(this.measureReq);
+    }
+    setOrder(state) {
+      let pos = 0, order = state.facet(layerOrder);
+      while (pos < order.length && order[pos] != this.layer)
+        pos++;
+      this.dom.style.zIndex = String((this.layer.above ? 150 : -1) - pos);
+    }
+    measure() {
+      return this.layer.markers(this.view);
+    }
+    scale() {
+      let { scaleX, scaleY } = this.view;
+      if (scaleX != this.scaleX || scaleY != this.scaleY) {
+        this.scaleX = scaleX;
+        this.scaleY = scaleY;
+        this.dom.style.transform = `scale(${1 / scaleX}, ${1 / scaleY})`;
+      }
+    }
+    draw(markers) {
+      if (markers.length != this.drawn.length || markers.some((p4, i) => !sameMarker(p4, this.drawn[i]))) {
+        let old = this.dom.firstChild, oldI = 0;
+        for (let marker of markers) {
+          if (marker.update && old && marker.constructor && this.drawn[oldI].constructor && marker.update(old, this.drawn[oldI])) {
+            old = old.nextSibling;
+            oldI++;
+          } else {
+            this.dom.insertBefore(marker.draw(), old);
+          }
+        }
+        while (old) {
+          let next = old.nextSibling;
+          old.remove();
+          old = next;
+        }
+        this.drawn = markers;
+        if (browser.safari && browser.safari_version >= 26)
+          this.dom.style.display = this.dom.firstChild ? "" : "none";
+      }
+    }
+    destroy() {
+      if (this.layer.destroy)
+        this.layer.destroy(this.dom, this.view);
+      this.dom.remove();
+    }
+  };
+  var layerOrder = /* @__PURE__ */ Facet.define();
+  function layer(config) {
+    return [
+      ViewPlugin.define((v7) => new LayerView(v7, config)),
+      layerOrder.of(config)
+    ];
+  }
+  var selectionConfig = /* @__PURE__ */ Facet.define({
+    combine(configs) {
+      return combineConfig(configs, {
+        cursorBlinkRate: 1200,
+        drawRangeCursor: true,
+        iosSelectionHandles: true
+      }, {
+        cursorBlinkRate: (a5, b7) => Math.min(a5, b7),
+        drawRangeCursor: (a5, b7) => a5 || b7
+      });
+    }
+  });
+  function drawSelection(config = {}) {
+    return [
+      selectionConfig.of(config),
+      cursorLayer,
+      selectionLayer,
+      hideNativeSelection,
+      nativeSelectionHidden.of(true)
+    ];
+  }
+  function configChanged(update) {
+    return update.startState.facet(selectionConfig) != update.state.facet(selectionConfig);
+  }
+  var cursorLayer = /* @__PURE__ */ layer({
+    above: true,
+    markers(view) {
+      let { state } = view, conf = state.facet(selectionConfig);
+      let cursors = [];
+      for (let r5 of state.selection.ranges) {
+        let prim = r5 == state.selection.main;
+        if (r5.empty || conf.drawRangeCursor && !(prim && browser.ios && conf.iosSelectionHandles)) {
+          let className = prim ? "cm-cursor cm-cursor-primary" : "cm-cursor cm-cursor-secondary";
+          let cursor2 = r5.empty ? r5 : EditorSelection.cursor(r5.head, r5.head > r5.anchor ? -1 : 1);
+          for (let piece of RectangleMarker.forRange(view, className, cursor2))
+            cursors.push(piece);
+        }
+      }
+      return cursors;
+    },
+    update(update, dom) {
+      if (update.transactions.some((tr8) => tr8.selection))
+        dom.style.animationName = dom.style.animationName == "cm-blink" ? "cm-blink2" : "cm-blink";
+      let confChange = configChanged(update);
+      if (confChange)
+        setBlinkRate(update.state, dom);
+      return update.docChanged || update.selectionSet || confChange;
+    },
+    mount(dom, view) {
+      setBlinkRate(view.state, dom);
+    },
+    class: "cm-cursorLayer"
+  });
+  function setBlinkRate(state, dom) {
+    dom.style.animationDuration = state.facet(selectionConfig).cursorBlinkRate + "ms";
+  }
+  var selectionLayer = /* @__PURE__ */ layer({
+    above: false,
+    markers(view) {
+      let markers = [], { main, ranges } = view.state.selection;
+      for (let r5 of ranges)
+        if (!r5.empty) {
+          for (let marker of RectangleMarker.forRange(view, "cm-selectionBackground", r5))
+            markers.push(marker);
+        }
+      if (browser.ios && !main.empty && view.state.facet(selectionConfig).iosSelectionHandles) {
+        for (let piece of RectangleMarker.forRange(view, "cm-selectionHandle cm-selectionHandle-start", EditorSelection.cursor(main.from, 1)))
+          markers.push(piece);
+        for (let piece of RectangleMarker.forRange(view, "cm-selectionHandle cm-selectionHandle-end", EditorSelection.cursor(main.to, 1)))
+          markers.push(piece);
+      }
+      return markers;
+    },
+    update(update, dom) {
+      return update.docChanged || update.selectionSet || update.viewportChanged || configChanged(update);
+    },
+    class: "cm-selectionLayer"
+  });
+  var hideNativeSelection = /* @__PURE__ */ Prec.highest(/* @__PURE__ */ EditorView.theme({
+    ".cm-line": {
+      "& ::selection, &::selection": { backgroundColor: "transparent !important" },
+      caretColor: "transparent !important"
+    },
+    ".cm-content": {
+      caretColor: "transparent !important",
+      "& :focus": {
+        caretColor: "initial !important",
+        "&::selection, & ::selection": {
+          backgroundColor: "Highlight !important"
+        }
+      }
+    }
+  }));
   var UnicodeRegexpSupport = /x/.unicode != null ? "gu" : "g";
   function highlightActiveLine() {
     return activeLineHighlighter;
@@ -12044,6 +12373,115 @@
   }, {
     decorations: (v7) => v7.decorations
   });
+  var MaxOff = 2e3;
+  function rectangleFor(state, a5, b7) {
+    let startLine = Math.min(a5.line, b7.line), endLine = Math.max(a5.line, b7.line);
+    let ranges = [];
+    if (a5.off > MaxOff || b7.off > MaxOff || a5.col < 0 || b7.col < 0) {
+      let startOff = Math.min(a5.off, b7.off), endOff = Math.max(a5.off, b7.off);
+      for (let i = startLine; i <= endLine; i++) {
+        let line = state.doc.line(i);
+        if (line.length <= endOff)
+          ranges.push(EditorSelection.range(line.from + startOff, line.to + endOff));
+      }
+    } else {
+      let startCol = Math.min(a5.col, b7.col), endCol = Math.max(a5.col, b7.col);
+      for (let i = startLine; i <= endLine; i++) {
+        let line = state.doc.line(i);
+        let start = findColumn(line.text, startCol, state.tabSize, true);
+        if (start < 0) {
+          ranges.push(EditorSelection.cursor(line.to));
+        } else {
+          let end = findColumn(line.text, endCol, state.tabSize);
+          ranges.push(EditorSelection.range(line.from + start, line.from + end));
+        }
+      }
+    }
+    return ranges;
+  }
+  function absoluteColumn(view, x8) {
+    let ref = view.coordsAtPos(view.viewport.from);
+    return ref ? Math.round(Math.abs((ref.left - x8) / view.defaultCharacterWidth)) : -1;
+  }
+  function getPos(view, event) {
+    let offset = view.posAtCoords({ x: event.clientX, y: event.clientY }, false);
+    let line = view.state.doc.lineAt(offset), off = offset - line.from;
+    let col = off > MaxOff ? -1 : off == line.length ? absoluteColumn(view, event.clientX) : countColumn(line.text, view.state.tabSize, offset - line.from);
+    return { line: line.number, col, off };
+  }
+  function rectangleSelectionStyle(view, event) {
+    let start = getPos(view, event), startSel = view.state.selection;
+    if (!start)
+      return null;
+    return {
+      update(update) {
+        if (update.docChanged) {
+          let newStart = update.changes.mapPos(update.startState.doc.line(start.line).from);
+          let newLine = update.state.doc.lineAt(newStart);
+          start = { line: newLine.number, col: start.col, off: Math.min(start.off, newLine.length) };
+          startSel = startSel.map(update.changes);
+        }
+      },
+      get(event2, _extend, multiple) {
+        let cur2 = getPos(view, event2);
+        if (!cur2)
+          return startSel;
+        let ranges = rectangleFor(view.state, start, cur2);
+        if (!ranges.length)
+          return startSel;
+        if (multiple)
+          return EditorSelection.create(ranges.concat(startSel.ranges));
+        else
+          return EditorSelection.create(ranges);
+      }
+    };
+  }
+  function rectangularSelection(options) {
+    let filter = (options === null || options === void 0 ? void 0 : options.eventFilter) || ((e) => e.altKey && e.button == 0);
+    return EditorView.mouseSelectionStyle.of((view, event) => filter(event) ? rectangleSelectionStyle(view, event) : null);
+  }
+  var keys = {
+    Alt: [18, (e) => !!e.altKey],
+    Control: [17, (e) => !!e.ctrlKey],
+    Shift: [16, (e) => !!e.shiftKey],
+    Meta: [91, (e) => !!e.metaKey]
+  };
+  var showCrosshair = { style: "cursor: crosshair" };
+  function crosshairCursor(options = {}) {
+    let [code, getter] = keys[options.key || "Alt"];
+    let plugin = ViewPlugin.fromClass(class {
+      constructor(view) {
+        this.view = view;
+        this.isDown = false;
+      }
+      set(isDown) {
+        if (this.isDown != isDown) {
+          this.isDown = isDown;
+          this.view.update([]);
+        }
+      }
+    }, {
+      eventObservers: {
+        keydown(e) {
+          this.set(e.keyCode == code || getter(e));
+        },
+        keyup(e) {
+          if (e.keyCode == code || !getter(e))
+            this.set(false);
+        },
+        mousemove(e) {
+          this.set(getter(e));
+        }
+      }
+    });
+    return [
+      plugin,
+      EditorView.contentAttributes.of((view) => {
+        var _a7;
+        return ((_a7 = view.plugin(plugin)) === null || _a7 === void 0 ? void 0 : _a7.isDown) ? showCrosshair : null;
+      })
+    ];
+  }
   var Outside = "-10000px";
   var TooltipViewManager = class {
     constructor(view, facet, createTooltipView, removeTooltipView) {
@@ -18801,7 +19239,7 @@
   function extendSel(target, how) {
     let selection2 = updateSel(target.state.selection, (range) => {
       let head = how(range);
-      return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || void 0);
+      return EditorSelection.range(range.anchor, head.head, head.goalColumn, head.bidiLevel || void 0, head.assoc);
     });
     if (selection2.eq(target.state.selection))
       return false;
@@ -73601,7 +74039,7 @@ ${e}`;
   }
   function renderDiagnostic(view, diagnostic, inPanel) {
     var _a7;
-    let keys = inPanel ? assignKeys(diagnostic.actions) : [];
+    let keys2 = inPanel ? assignKeys(diagnostic.actions) : [];
     return crelt("li", { class: "cm-diagnostic cm-diagnostic-" + diagnostic.severity }, crelt("span", { class: "cm-diagnosticText" }, diagnostic.renderMessage ? diagnostic.renderMessage(view) : diagnostic.message), (_a7 = diagnostic.actions) === null || _a7 === void 0 ? void 0 : _a7.map((action, i) => {
       let fired = false, click = (e) => {
         e.preventDefault();
@@ -73612,7 +74050,7 @@ ${e}`;
         if (found)
           action.apply(view, found.from, found.to);
       };
-      let { name: name2 } = action, keyIndex = keys[i] ? name2.indexOf(keys[i]) : -1;
+      let { name: name2 } = action, keyIndex = keys2[i] ? name2.indexOf(keys2[i]) : -1;
       let nameElt = keyIndex < 0 ? name2 : [
         name2.slice(0, keyIndex),
         crelt("u", name2.slice(keyIndex, keyIndex + 1)),
@@ -73624,7 +74062,7 @@ ${e}`;
         class: "cm-diagnosticAction" + markClass,
         onclick: click,
         onmousedown: click,
-        "aria-label": ` Action: ${name2}${keyIndex < 0 ? "" : ` (access key "${keys[i]})"`}.`
+        "aria-label": ` Action: ${name2}${keyIndex < 0 ? "" : ` (access key "${keys2[i]})"`}.`
       }, nameElt);
     }), diagnostic.source && crelt("div", { class: "cm-diagnosticSource" }, diagnostic.source));
   }
@@ -73670,9 +74108,9 @@ ${e}`;
         } else if (event.keyCode == 13) {
           this.view.focus();
         } else if (event.keyCode >= 65 && event.keyCode <= 90 && this.selectedIndex >= 0) {
-          let { diagnostic } = this.items[this.selectedIndex], keys = assignKeys(diagnostic.actions);
-          for (let i = 0; i < keys.length; i++)
-            if (keys[i].toUpperCase().charCodeAt(0) == event.keyCode) {
+          let { diagnostic } = this.items[this.selectedIndex], keys2 = assignKeys(diagnostic.actions);
+          for (let i = 0; i < keys2.length; i++)
+            if (keys2[i].toUpperCase().charCodeAt(0) == event.keyCode) {
               let found = findDiagnostic(this.view.state.field(lintState).diagnostics, diagnostic);
               if (found)
                 diagnostic.actions[i].apply(view, found.from, found.to);
@@ -74022,7 +74460,8 @@ ${e}`;
           { key: "Cmd-Alt-f", run: () => {
             this.format();
             return true;
-          } }
+          } },
+          { key: "Mod-d", run: selectNextOccurrence }
         ]),
         langCompartment.of(javascript()),
         themeCompartment.of(this.themeManager.currentExtension()),
@@ -74039,6 +74478,10 @@ ${e}`;
             this.onUpdateCallback();
         }),
         jsLinter(),
+        rectangularSelection(),
+        crosshairCursor(),
+        drawSelection(),
+        EditorState.allowMultipleSelections.of(true),
         EditorView.lineWrapping
       ];
     }

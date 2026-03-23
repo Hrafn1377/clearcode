@@ -9,6 +9,9 @@ import type { ThemeManager } from "../themes/theme-manager";
 import { detectLanguage } from "../utils/language-detect";
 import { formatCode } from "../utils/prettifier";
 import { jsLinter } from "../utils/linter";
+import { rectangularSelection, crosshairCursor } from "@codemirror/view";
+import { drawSelection } from "@codemirror/view";
+import { selectNextOccurrence } from "@codemirror/search";
 
 const langCompartment = new Compartment();
 const themeCompartment = new Compartment();
@@ -52,6 +55,7 @@ export class ClearCodeEditor {
                 ...searchKeymap,
                 ...completionKeymap,
                 { key: "Cmd-Alt-f", run: () => { this.format(); return true; } },
+                { key: "Mod-d", run: selectNextOccurrence },
             ]),
             langCompartment.of(javascript()),
             themeCompartment.of(this.themeManager.currentExtension()),
@@ -66,6 +70,10 @@ export class ClearCodeEditor {
                 if (update.docChanged && this.onUpdateCallback) this.onUpdateCallback();
             }),
             jsLinter(),
+            rectangularSelection(),
+            crosshairCursor(),
+            drawSelection(),
+            EditorState.allowMultipleSelections.of(true),
             EditorView.lineWrapping,
         ];
     }
