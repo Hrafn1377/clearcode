@@ -80,6 +80,9 @@ export class SettingsPanel {
         <select id="settings-theme" class="settings-select">
           ${THEMES.map(t => `<option value="${t.id}">${t.label}</option>`).join('')}
         </select>
+        <button id="settings-customize-palette" style="margin-top:0.5rem; width:100%; background:transparent; border:1px solid var(--accent-purple); border-radius:4px; padding:0.4rem; color:var(--accent-purple); font-family:var(--font-mono); font-size:0.8rem; cursor:pointer; display:none;">
+  Customize Palette →
+</button>
       </div>
 
       <div class="settings-section">
@@ -252,10 +255,30 @@ export class SettingsPanel {
 
     closeBtn.onclick = () => this.close();
 
+    const customizeBtn = this.panel.querySelector('#settings-customize-palette') as HTMLButtonElement;
+
+    const updateCustomizeBtn = (themeId: string) => {
+      const colorBlindThemes = [
+        'protanopia-dark', 'protanopia-light',
+        'deuteranopia-dark', 'deuteranopia-light',
+        'tritanopia-dark', 'tritanopia-light',
+        'achromatopsia-dark', 'achromatopsia-light',
+      ];
+      customizeBtn.style.display = colorBlindThemes.includes(themeId) ? 'block' : 'none';
+    };
+
+    updateCustomizeBtn(data.theme ?? 'synthwave-2077');
+
     themeSelect.onchange = () => {
       this.themeManager.setTheme(themeSelect.value as any);
       this.save({ theme: themeSelect.value });
+      updateCustomizeBtn(themeSelect.value);
     };
+
+    customizeBtn.onclick = () => {
+      (window as any).__clearcode?.paletteEditor?.open(themeSelect.value);
+    };
+
     fontRange.oninput = () => {
       const size = parseInt(fontRange.value);
       fontValue.textContent = fontRange.value;

@@ -10,6 +10,7 @@ import { ProjectManager } from "./components/project-manager";
 import { ProjectSwitcher } from "./components/project-switcher";
 import { checkForUpdates } from "./utils/version-check";
 import { AIPanel } from "./components/ai-panel";
+import { PaletteEditor } from "./components/palette-editor";
 
 console.log("[ClearCode] script loaded");
 
@@ -27,6 +28,7 @@ function boot() {
     const projectSwitcher = new ProjectSwitcher(projectManager);
     const fileManager = new FileManager(editor);
     const settings = new SettingsPanel(themeManager, tts);
+    const paletteEditor = new PaletteEditor();
     const aiPanel = new AIPanel(
       () => {
         const key = document.getElementById('settings-api-key') as HTMLInputElement;
@@ -119,7 +121,7 @@ function boot() {
         }
     });
 
-    (window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings };
+    (window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor };
 }
 
 if (document.readyState === "loading") {

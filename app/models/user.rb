@@ -17,6 +17,7 @@ class User < ApplicationRecord
       dyslexia_mode: dyslexia_mode,
       font_size: font_size || 14,
       anthropic_api_key: anthropic_api_key,
+      custom_palette: custom_palette ? JSON.parse(custom_palette) : {},
     }
   end
 

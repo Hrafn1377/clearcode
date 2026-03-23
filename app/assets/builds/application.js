@@ -75280,20 +75280,198 @@ ${e}`;
   // app/javascript/components/tutorial.ts
   var APP_VERSION = "3.0.0";
   var TUTORIAL_KEY = "clearcode_tutorial_version";
+  var STEPS = [
+    {
+      title: "Welcome to ClearCode",
+      content: "A code editor built for everyone. Let's take a quick tour of the key features.",
+      icon: "\u2726"
+    },
+    {
+      title: "Projects",
+      content: "Use the project switcher in the topbar to create and switch between projects. Files are grouped by project.",
+      icon: "\u2B21"
+    },
+    {
+      title: "Files",
+      content: "Click '+ New File' in the sidebar to create a file. Double-click a filename to rename it. Files are auto-saved every 5 minutes.",
+      icon: "\u{1F4C4}"
+    },
+    {
+      title: "Themes & Accessibility",
+      content: "Open Settings to choose from 15 themes including 8 colorblind-safe modes. Dyslexia mode and font size are also adjustable.",
+      icon: "\u{1F3A8}"
+    },
+    {
+      title: "Text to Speech",
+      content: "In Settings, configure TTS voice and speed. The editor can read your code back to you.",
+      icon: "\u{1F50A}"
+    },
+    {
+      title: "Git Integration",
+      content: "Click 'Git' in the topbar to open the Git panel. Point it at any local repo to view status, diffs, and commit changes.",
+      icon: "\u2387"
+    },
+    {
+      title: "AI Assistant",
+      content: "Click '\u2726 AI' in the topbar to open the AI assistant. Add your Anthropic API key in Settings to enable it.",
+      icon: "\u2726"
+    },
+    {
+      title: "Focus Mode",
+      content: "Click \u22A1 in the topbar to enter distraction-free focus mode. Press Escape to exit.",
+      icon: "\u22A1"
+    },
+    {
+      title: "Keyboard Shortcuts",
+      content: "Cmd+S to save \xB7 Cmd+Alt+F to format code \xB7 Shift+Enter to send AI message",
+      icon: "\u2328"
+    }
+  ];
   var TutorialSystem = class {
     seen;
+    currentStep = 0;
+    overlay = null;
+    modal = null;
     constructor() {
       const stored = localStorage.getItem(TUTORIAL_KEY);
       this.seen = stored === APP_VERSION;
+      console.info("[ClearCode] Tutorial: version", APP_VERSION);
       if (!this.seen)
         this.show();
     }
     show() {
-      console.info("[ClearCode] Tutorial: version", APP_VERSION);
+      this.currentStep = 0;
+      this.buildUI();
+      this.renderStep();
+    }
+    buildUI() {
+      if (document.getElementById("tutorial-overlay"))
+        return;
+      const overlay = document.createElement("div");
+      overlay.id = "tutorial-overlay";
+      overlay.style.cssText = `
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    `;
+      document.body.appendChild(overlay);
+      this.overlay = overlay;
+      const modal = document.createElement("div");
+      modal.id = "tutorial-modal";
+      modal.style.cssText = `
+      background: var(--bg-panel);
+      border: 1px solid var(--accent-cyan);
+      border-radius: 8px;
+      padding: 2rem;
+      width: 480px;
+      max-width: 90vw;
+      box-shadow: 0 0 40px #00e5ff22;
+      font-family: var(--font-ui);
+      color: var(--fg);
+    `;
+      overlay.appendChild(modal);
+      this.modal = modal;
+      const style = document.createElement("style");
+      style.textContent = `
+      #tutorial-modal .tutorial-icon {
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
+      }
+      #tutorial-modal .tutorial-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: var(--accent-cyan);
+        margin-bottom: 0.75rem;
+        font-family: var(--font-mono);
+      }
+      #tutorial-modal .tutorial-content {
+        font-size: 0.9rem;
+        color: var(--fg);
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+      }
+      #tutorial-modal .tutorial-dots {
+        display: flex;
+        gap: 0.4rem;
+        justify-content: center;
+        margin-bottom: 1.25rem;
+      }
+      #tutorial-modal .tutorial-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--border);
+        transition: background 0.2s;
+      }
+      #tutorial-modal .tutorial-dot.active {
+        background: var(--accent-cyan);
+      }
+      #tutorial-modal .tutorial-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      #tutorial-modal .btn-tutorial-skip {
+        background: none;
+        border: none;
+        color: var(--fg-muted);
+        cursor: pointer;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+      }
+      #tutorial-modal .btn-tutorial-next {
+        background: var(--accent-cyan);
+        border: none;
+        border-radius: 4px;
+        padding: 0.5rem 1.25rem;
+        color: var(--bg);
+        font-family: var(--font-mono);
+        font-size: 0.85rem;
+        cursor: pointer;
+        font-weight: bold;
+      }
+    `;
+      document.head.appendChild(style);
+    }
+    renderStep() {
+      if (!this.modal)
+        return;
+      const step = STEPS[this.currentStep];
+      const isLast = this.currentStep === STEPS.length - 1;
+      this.modal.innerHTML = `
+      <div class="tutorial-icon">${step.icon}</div>
+      <div class="tutorial-title">${step.title}</div>
+      <div class="tutorial-content">${step.content}</div>
+      <div class="tutorial-dots">
+        ${STEPS.map((_8, i) => `<div class="tutorial-dot ${i === this.currentStep ? "active" : ""}"></div>`).join("")}
+      </div>
+      <div class="tutorial-actions">
+        <button class="btn-tutorial-skip">Skip tutorial</button>
+        <button class="btn-tutorial-next">${isLast ? "Get started \u2192" : "Next \u2192"}</button>
+      </div>
+    `;
+      this.modal.querySelector(".btn-tutorial-skip").addEventListener("click", () => this.dismiss());
+      this.modal.querySelector(".btn-tutorial-next").addEventListener("click", () => {
+        if (isLast) {
+          this.dismiss();
+        } else {
+          this.currentStep++;
+          this.renderStep();
+        }
+      });
     }
     dismiss() {
       localStorage.setItem(TUTORIAL_KEY, APP_VERSION);
       this.seen = true;
+      if (this.overlay) {
+        this.overlay.remove();
+        this.overlay = null;
+        this.modal = null;
+      }
     }
   };
 
@@ -75578,6 +75756,9 @@ ${e}`;
         <select id="settings-theme" class="settings-select">
           ${THEMES.map((t4) => `<option value="${t4.id}">${t4.label}</option>`).join("")}
         </select>
+        <button id="settings-customize-palette" style="margin-top:0.5rem; width:100%; background:transparent; border:1px solid var(--accent-purple); border-radius:4px; padding:0.4rem; color:var(--accent-purple); font-family:var(--font-mono); font-size:0.8rem; cursor:pointer; display:none;">
+  Customize Palette \u2192
+</button>
       </div>
 
       <div class="settings-section">
@@ -75741,9 +75922,28 @@ ${e}`;
         ).join("");
       }
       closeBtn.onclick = () => this.close();
+      const customizeBtn = this.panel.querySelector("#settings-customize-palette");
+      const updateCustomizeBtn = (themeId) => {
+        const colorBlindThemes = [
+          "protanopia-dark",
+          "protanopia-light",
+          "deuteranopia-dark",
+          "deuteranopia-light",
+          "tritanopia-dark",
+          "tritanopia-light",
+          "achromatopsia-dark",
+          "achromatopsia-light"
+        ];
+        customizeBtn.style.display = colorBlindThemes.includes(themeId) ? "block" : "none";
+      };
+      updateCustomizeBtn(data2.theme ?? "synthwave-2077");
       themeSelect.onchange = () => {
         this.themeManager.setTheme(themeSelect.value);
         this.save({ theme: themeSelect.value });
+        updateCustomizeBtn(themeSelect.value);
+      };
+      customizeBtn.onclick = () => {
+        window.__clearcode?.paletteEditor?.open(themeSelect.value);
       };
       fontRange.oninput = () => {
         const size = parseInt(fontRange.value);
@@ -76408,6 +76608,248 @@ ${code}
     }
   };
 
+  // app/javascript/components/palette-editor.ts
+  var COLORBLIND_THEMES = [
+    "protanopia-dark",
+    "protanopia-light",
+    "deuteranopia-dark",
+    "deuteranopia-light",
+    "tritanopia-dark",
+    "tritanopia-light",
+    "achromatopsia-dark",
+    "achromatopsia-light"
+  ];
+  var PALETTE_KEYS = [
+    { key: "--bg", label: "Background" },
+    { key: "--bg-panel", label: "Panel Background" },
+    { key: "--bg-surface", label: "Surface Background" },
+    { key: "--fg", label: "Text" },
+    { key: "--fg-muted", label: "Muted Text" },
+    { key: "--accent-cyan", label: "Primary Accent" },
+    { key: "--accent-yellow", label: "Secondary Accent" },
+    { key: "--border", label: "Border" }
+  ];
+  var PaletteEditor = class {
+    panel;
+    overlay;
+    csrfToken;
+    currentPalette = {};
+    constructor() {
+      this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+      this.panel = this.buildPanel();
+      this.overlay = this.buildOverlay();
+      document.body.appendChild(this.overlay);
+      document.body.appendChild(this.panel);
+      this.addStyles();
+    }
+    buildOverlay() {
+      const overlay = document.createElement("div");
+      overlay.id = "palette-overlay";
+      overlay.style.cssText = `
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 199;
+    `;
+      overlay.addEventListener("click", () => this.close());
+      return overlay;
+    }
+    buildPanel() {
+      const panel = document.createElement("div");
+      panel.id = "palette-panel";
+      panel.style.cssText = `
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      max-width: 90vw;
+      max-height: 80vh;
+      overflow-y: auto;
+      background: var(--bg-panel);
+      border: 1px solid var(--accent-purple);
+      border-radius: 8px;
+      z-index: 200;
+      padding: 1.5rem;
+      box-shadow: 0 0 40px #b45fcb33;
+      font-family: var(--font-ui);
+      color: var(--fg);
+    `;
+      return panel;
+    }
+    addStyles() {
+      if (document.getElementById("palette-editor-styles"))
+        return;
+      const style = document.createElement("style");
+      style.id = "palette-editor-styles";
+      style.textContent = `
+      .palette-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid var(--border);
+      }
+      .palette-label {
+        font-size: 0.85rem;
+        color: var(--fg);
+      }
+      .palette-key {
+        font-size: 0.7rem;
+        color: var(--fg-muted);
+        font-family: var(--font-mono);
+      }
+      .palette-color-input {
+        width: 40px;
+        height: 32px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        cursor: pointer;
+        padding: 2px;
+        background: var(--bg-surface);
+      }
+      .palette-hex {
+        width: 80px;
+        background: var(--bg-surface);
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        padding: 0.3rem 0.5rem;
+        color: var(--fg);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        outline: none;
+      }
+      .palette-reset-btn {
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        color: var(--fg-muted);
+        cursor: pointer;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.4rem;
+      }
+      .palette-reset-btn:hover { color: var(--accent-pink); border-color: var(--accent-pink); }
+    `;
+      document.head.appendChild(style);
+    }
+    async open(currentTheme) {
+      if (!COLORBLIND_THEMES.includes(currentTheme)) {
+        alert("Custom palettes are only available for colorblind themes.");
+        return;
+      }
+      const res = await fetch("/settings", { headers: { "Accept": "application/json" } });
+      const data2 = await res.json();
+      this.currentPalette = data2.custom_palette ?? {};
+      this.render(currentTheme);
+      this.panel.style.display = "block";
+      this.overlay.style.display = "block";
+    }
+    close() {
+      this.panel.style.display = "none";
+      this.overlay.style.display = "none";
+    }
+    render(theme2) {
+      const root = document.documentElement;
+      this.panel.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+        <span style="color:var(--accent-purple); font-size:0.85rem; letter-spacing:0.1em; text-transform:uppercase;">Customize Palette</span>
+        <button id="palette-close" style="background:none; border:none; color:var(--fg-muted); cursor:pointer; font-size:1.2rem;">\xD7</button>
+      </div>
+      <p style="font-size:0.75rem; color:var(--fg-muted); margin-bottom:1rem;">
+        Adjusting: <strong style="color:var(--fg)">${theme2}</strong> \u2014 changes apply live.
+      </p>
+      <div id="palette-rows"></div>
+      <div style="display:flex; gap:0.75rem; margin-top:1.25rem; padding-top:1rem; border-top:1px solid var(--border);">
+        <button id="palette-save" style="flex:1; background:var(--accent-purple); border:none; border-radius:4px; padding:0.5rem; color:white; font-family:var(--font-mono); font-size:0.85rem; cursor:pointer;">Save Palette</button>
+        <button id="palette-reset-all" style="background:transparent; border:1px solid var(--border); border-radius:4px; padding:0.5rem 1rem; color:var(--fg-muted); font-family:var(--font-mono); font-size:0.85rem; cursor:pointer;">Reset All</button>
+      </div>
+    `;
+      const rowsEl = this.panel.querySelector("#palette-rows");
+      PALETTE_KEYS.forEach(({ key, label }) => {
+        const currentValue = this.currentPalette[key] || getComputedStyle(root).getPropertyValue(key).trim();
+        const row = document.createElement("div");
+        row.className = "palette-row";
+        row.innerHTML = `
+        <div>
+          <div class="palette-label">${label}</div>
+          <div class="palette-key">${key}</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <input type="color" class="palette-color-input" data-key="${key}" value="${currentValue}" />
+          <input type="text" class="palette-hex" data-key="${key}" value="${currentValue}" />
+          <button class="palette-reset-btn" data-key="${key}">\u21BA</button>
+        </div>
+      `;
+        rowsEl.appendChild(row);
+      });
+      this.panel.querySelector("#palette-close").addEventListener("click", () => this.close());
+      this.panel.querySelectorAll(".palette-color-input").forEach((input) => {
+        input.addEventListener("input", (e) => {
+          const el5 = e.target;
+          const key = el5.dataset.key;
+          const val = el5.value;
+          const hex = this.panel.querySelector(`.palette-hex[data-key="${key}"]`);
+          if (hex)
+            hex.value = val;
+          this.applyColor(key, val);
+        });
+      });
+      this.panel.querySelectorAll(".palette-hex").forEach((input) => {
+        input.addEventListener("change", (e) => {
+          const el5 = e.target;
+          const key = el5.dataset.key;
+          const val = el5.value;
+          const color = this.panel.querySelector(`.palette-color-input[data-key="${key}"]`);
+          if (color)
+            color.value = val;
+          this.applyColor(key, val);
+        });
+      });
+      this.panel.querySelectorAll(".palette-reset-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          console.log("[ClearCode] reset btn clicked");
+          const key = btn.dataset.key;
+          delete this.currentPalette[key];
+          document.documentElement.style.removeProperty(key);
+          this.save();
+          this.render(theme2);
+          this.applyAllColors();
+        });
+      });
+      this.panel.querySelector("#palette-save").addEventListener("click", () => this.save());
+      this.panel.querySelector("#palette-reset-all").addEventListener("click", () => {
+        this.currentPalette = {};
+        PALETTE_KEYS.forEach(({ key }) => {
+          document.documentElement.style.removeProperty(key);
+        });
+        this.applyAllColors();
+        this.save();
+        this.render(theme2);
+      });
+    }
+    applyColor(key, value) {
+      document.documentElement.style.setProperty(key, value);
+      this.currentPalette[key] = value;
+    }
+    applyAllColors() {
+      Object.entries(this.currentPalette).forEach(([key, val]) => {
+        document.documentElement.style.setProperty(key, val);
+      });
+    }
+    async save() {
+      await fetch("/settings", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": this.csrfToken
+        },
+        body: JSON.stringify({ custom_palette: JSON.stringify(this.currentPalette) })
+      });
+    }
+  };
+
   // app/javascript/application.ts
   console.log("[ClearCode] script loaded");
   function boot() {
@@ -76424,6 +76866,7 @@ ${code}
     const projectSwitcher = new ProjectSwitcher(projectManager);
     const fileManager = new FileManager(editor);
     const settings = new SettingsPanel(themeManager, tts);
+    const paletteEditor = new PaletteEditor();
     const aiPanel = new AIPanel(
       () => {
         const key = document.getElementById("settings-api-key");
@@ -76507,7 +76950,7 @@ ${code}
         focusBtn?.click();
       }
     });
-    window.__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings };
+    window.__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor };
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);
