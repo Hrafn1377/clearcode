@@ -15,6 +15,6 @@ class SettingsController < ApplicationController
     private
 
     def settings_params
-        params.permit(:theme, :font_size, :dyslexia_mode, :anthropic_api_key, :custom_palette)
+        params.permit(:theme, :font_size, :dyslexia_mode, :anthropic_api_key, :custom_palette, :github_token)
     end
 end

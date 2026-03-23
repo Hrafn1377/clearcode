@@ -1,5 +1,6 @@
 import type { ClearCodeEditor } from "../editor/editor";
 import type { ThemeManager } from "../themes/theme-manager";
+import { backupToGist } from "../utils/gist";
 
 export interface CodeFile {
   id: number;
@@ -135,6 +136,7 @@ export class FileManager {
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
         <button class="btn-save" id="btn-save-file">↓ Save</button>
+        <button class="btn-gist" id="btn-backup-gist">☁ Gist</button>
       </div>
       <ul class="file-list">
         ${this.files.map(f => `
@@ -153,6 +155,29 @@ export class FileManager {
 
     document.getElementById("btn-save-file")?.addEventListener("click", () => {
       this.saveCurrentFile();
+    });
+
+    document.getElementById("btn-backup-gist")?.addEventListener("click", async () => {
+      const token = (document.getElementById('settings-github-token') as HTMLInputElement)?.value;
+      if (!token) {
+        alert('Add your GitHub token in Settings to use Gist backup.');
+        return;
+      }
+      if (!this.currentFile) {
+        alert('Open a file first to back it up.');
+        return;
+      }
+      try {
+        const result = await backupToGist(
+          token,
+          `ClearCode backup — ${this.currentFile.name}`,
+          [{ name: this.currentFile.name, content: this.editor.getContent() }]
+        );
+        const open = confirm(`✓ Backed up to Gist!\n\n${result.html_url}\n\nOpen in browser?`);
+        if (open) window.open(result.html_url, '_blank');
+      } catch (e: any) {
+        alert(`gist backup failed: ${e.message}`);
+      }
     });
 
     this.sidebar.querySelectorAll(".file-item .file-name").forEach(el => {

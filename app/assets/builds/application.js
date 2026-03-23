@@ -75441,6 +75441,8 @@ ${e}`;
       if (!this.modal)
         return;
       const step = STEPS[this.currentStep];
+      if (!step)
+        return;
       const isLast = this.currentStep === STEPS.length - 1;
       this.modal.innerHTML = `
       <div class="tutorial-icon">${step.icon}</div>
@@ -75474,6 +75476,38 @@ ${e}`;
       }
     }
   };
+
+  // app/javascript/utils/gist.ts
+  async function backupToGist(token, description, files, isPublic = false) {
+    const filesObj = {};
+    files.forEach((f7) => {
+      filesObj[f7.name] = { content: f7.content || " " };
+    });
+    const res = await fetch("https://api.github.com/gists", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+      },
+      body: JSON.stringify({
+        description,
+        public: isPublic,
+        files: filesObj
+      })
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message ?? "Failed to create Gist");
+    }
+    const data2 = await res.json();
+    return {
+      id: data2.id,
+      url: data2.url,
+      html_url: data2.html_url
+    };
+  }
 
   // app/javascript/components/file-manager.ts
   var FileManager = class {
@@ -75596,6 +75630,7 @@ ${e}`;
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
         <button class="btn-save" id="btn-save-file">\u2193 Save</button>
+        <button class="btn-gist" id="btn-backup-gist">\u2601 Gist</button>
       </div>
       <ul class="file-list">
         ${this.files.map((f7) => `
@@ -75613,6 +75648,33 @@ ${e}`;
       });
       document.getElementById("btn-save-file")?.addEventListener("click", () => {
         this.saveCurrentFile();
+      });
+      document.getElementById("btn-backup-gist")?.addEventListener("click", async () => {
+        const token = document.getElementById("settings-github-token")?.value;
+        if (!token) {
+          alert("Add your GitHub token in Settings to use Gist backup.");
+          return;
+        }
+        if (!this.currentFile) {
+          alert("Open a file first to back it up.");
+          return;
+        }
+        try {
+          const result = await backupToGist(
+            token,
+            `ClearCode backup \u2014 ${this.currentFile.name}`,
+            [{ name: this.currentFile.name, content: this.editor.getContent() }]
+          );
+          const open = confirm(`\u2713 Backed up to Gist!
+
+${result.html_url}
+
+Open in browser?`);
+          if (open)
+            window.open(result.html_url, "_blank");
+        } catch (e) {
+          alert(`gist backup failed: ${e.message}`);
+        }
       });
       this.sidebar.querySelectorAll(".file-item .file-name").forEach((el5) => {
         el5.addEventListener("click", () => {
@@ -75811,6 +75873,19 @@ ${e}`;
   </div>
 </div>
 
+<div class="settings-section">
+  <label class="settings-label">GitHub Token</label>
+  <input type="text" id="settings-github-token" class="settings-select"
+    placeholder="ghp_..." 
+    style="font-family:var(--font-mono); font-size:0.8rem;" />
+  <div style="font-size:0.7rem; color:var(--fg-muted); margin-top:0.4rem;">
+    Used for Gist backups. Token needs <strong>gist</strong> scope only.
+    <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" 
+      style="color:var(--accent-cyan);">Create token \u2192</a>
+  </div>
+</div>
+
+
       <div class="settings-section" style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border);">
         <a href="https://bsky.app/profile/clearcode.bsky.social" target="_blank" rel="noopener"
           style="color:var(--accent-cyan); font-size:0.8rem; text-decoration:none;">
@@ -75907,12 +75982,14 @@ ${e}`;
       const testBtn = this.panel.querySelector("#settings-tts-test");
       const stopBtn = this.panel.querySelector("#settings-tts-stop");
       const apiKeyInput = this.panel.querySelector("#settings-api-key");
+      const githubTokenInput = this.panel.querySelector("#settings-github-token");
       themeSelect.value = data2.theme ?? "synthwave-2077";
       fontRange.value = data2.font_size ?? "14";
       fontValue.textContent = fontRange.value;
       dyslexiaCheck.checked = data2.dyslexia_mode ?? false;
       document.documentElement.setAttribute("data-dyslexia", String(data2.dyslexia_mode ?? false));
       apiKeyInput.value = data2.anthropic_api_key ?? "";
+      githubTokenInput.value = data2.github_token ?? "";
       rateRange.value = String(this.tts.getRate());
       rateValue.textContent = String(this.tts.getRate());
       const voices = this.tts.getVoices();
@@ -75964,6 +76041,7 @@ ${e}`;
       testBtn.onclick = () => this.tts.speak("ClearCode text to speech is working.");
       stopBtn.onclick = () => this.tts.stop();
       apiKeyInput.onchange = () => this.save({ anthropic_api_key: apiKeyInput.value });
+      githubTokenInput.onchange = () => this.save({ github_token: githubTokenInput.value });
     }
     close() {
       this.panel.style.display = "none";

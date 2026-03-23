@@ -135,6 +135,19 @@ export class SettingsPanel {
   </div>
 </div>
 
+<div class="settings-section">
+  <label class="settings-label">GitHub Token</label>
+  <input type="text" id="settings-github-token" class="settings-select"
+    placeholder="ghp_..." 
+    style="font-family:var(--font-mono); font-size:0.8rem;" />
+  <div style="font-size:0.7rem; color:var(--fg-muted); margin-top:0.4rem;">
+    Used for Gist backups. Token needs <strong>gist</strong> scope only.
+    <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener" 
+      style="color:var(--accent-cyan);">Create token →</a>
+  </div>
+</div>
+
+
       <div class="settings-section" style="margin-top:2rem; padding-top:1rem; border-top:1px solid var(--border);">
         <a href="https://bsky.app/profile/clearcode.bsky.social" target="_blank" rel="noopener"
           style="color:var(--accent-cyan); font-size:0.8rem; text-decoration:none;">
@@ -235,6 +248,7 @@ export class SettingsPanel {
     const testBtn = this.panel.querySelector('#settings-tts-test') as HTMLButtonElement;
     const stopBtn = this.panel.querySelector('#settings-tts-stop') as HTMLButtonElement;
     const apiKeyInput = this.panel.querySelector('#settings-api-key') as HTMLInputElement;
+    const githubTokenInput = this.panel.querySelector('#settings-github-token') as HTMLInputElement;
 
     themeSelect.value = data.theme ?? 'synthwave-2077';
     fontRange.value = data.font_size ?? '14';
@@ -242,6 +256,7 @@ export class SettingsPanel {
     dyslexiaCheck.checked = data.dyslexia_mode ?? false;
     document.documentElement.setAttribute('data-dyslexia', String(data.dyslexia_mode ?? false));
     apiKeyInput.value = data.anthropic_api_key ?? '';
+    githubTokenInput.value = data.github_token ?? '';
 
     rateRange.value = String(this.tts.getRate());
     rateValue.textContent = String(this.tts.getRate());
@@ -298,6 +313,7 @@ export class SettingsPanel {
     testBtn.onclick = () => this.tts.speak("ClearCode text to speech is working.");
     stopBtn.onclick = () => this.tts.stop();
     apiKeyInput.onchange = () => this.save({ anthropic_api_key: apiKeyInput.value });
+    githubTokenInput.onchange = () => this.save({ github_token: githubTokenInput.value });
   }
 
   close() {

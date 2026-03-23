@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_22_220553) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_23_204402) do
   create_table "code_files", force: :cascade do |t|
     t.text "content", default: ""
     t.datetime "created_at", null: false
@@ -41,6 +41,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_220553) do
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.integer "font_size", default: 14
+    t.string "github_token"
     t.string "license_key"
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
