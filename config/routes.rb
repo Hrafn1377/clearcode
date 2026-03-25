@@ -1,8 +1,8 @@
 Rails.application.routes.draw do
-  get "version/current"
-  devise_for :users
-
   root "editor#index"
+  get '/timer', to: 'timer#index'
+
+  devise_for :users
 
   get  "setup", to: "setup#index"
   post "setup", to: "setup#create"
@@ -12,9 +12,12 @@ Rails.application.routes.draw do
   resources :projects, only: [:index, :create, :update, :destroy] do
     member do
       post :open
-      get :export
+      get  :export
     end
-  end    
+  end
+
+  resources :timer_projects, only: [:index, :create, :update, :destroy]
+  resources :timer_entries, only: [:create, :update, :destroy]
 
   resource :settings, only: [:show, :update]
 

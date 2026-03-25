@@ -2,6 +2,7 @@ class User < ApplicationRecord
   devise :database_authenticatable, :rememberable, :validatable
   has_many :code_files, dependent: :destroy
   has_many :projects, dependent: :destroy
+  has_many :timer_projects, dependent: :destroy
 
   VALID_THEMES = %w[
     synthwave-2077 nordic-frost obsidian solarized-dark solarized-light dracula one-dark

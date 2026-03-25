@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="<%= current_user&.theme || 'synthwave-2077' %>">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="<%= form_authenticity_token %>">
+  <title>ClearCode Timer</title>
+  <style>
+    :root {
+      --bg:           #0d0d1a;
+      --bg-panel:     #12122a;
+      --bg-surface:   #1a1a35;
+      --fg:           #e2e2ff;
+      --fg-muted:     #6b6b8a;
+      --accent-pink:  #ff2079;
+      --accent-cyan:  #00e5ff;
+      --accent-yellow:#ffe600;
+      --accent-green: #39ff14;
+      --border:       #2a1f4a;
+      --font-mono:    'Fira Code', 'JetBrains Mono', monospace;
+      --font-ui:      system-ui, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--font-ui);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #timer-header {
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--accent-pink);
+      padding: 0.5rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-family: var(--font-mono);
+      color: var(--accent-pink);
+      font-size: 0.8rem;
+      font-weight: bold;
+      text-shadow: 0 0 8px var(--accent-pink);
+      letter-spacing: 0.1em;
+    }
+
+    #timer-body {
+      flex: 1;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      overflow-y: auto;
+    }
+
+    #current-timer {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    #project-select {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.4rem 0.5rem;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      outline: none;
+      margin-bottom: 0.75rem;
+    }
+
+    #timer-display {
+      font-family: var(--font-mono);
+      font-size: 2.5rem;
+      color: var(--accent-cyan);
+      text-shadow: 0 0 12px var(--accent-cyan);
+      margin: 0.5rem 0;
+      letter-spacing: 0.05em;
+    }
+
+    .btn-timer {
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      padding: 0.6rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .btn-start { background: var(--accent-green); color: var(--bg); }
+    .btn-stop { background: var(--accent-pink); color: var(--bg); }
+
+    #note-input {
+      width: 100%;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.4rem 0.5rem;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      outline: none;
+      margin-bottom: 0.5rem;
+    }
+
+    #projects-section {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .section-title {
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.75rem;
+    }
+
+    .project-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .project-row:last-child { border-bottom: none; }
+
+    .project-running-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent-green);
+      box-shadow: 0 0 6px var(--accent-green);
+      display: inline-block;
+      margin-right: 0.4rem;
+    }
+
+    #new-project {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
+
+    #new-project input {
+      flex: 1;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.4rem 0.5rem;
+      color: var(--fg);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      outline: none;
+    }
+
+    .btn-add {
+      background: var(--accent-cyan);
+      border: none;
+      border-radius: 4px;
+      padding: 0.4rem 0.75rem;
+      color: var(--bg);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="timer-header">
+    <span class="logo">CLEARCODE TIMER</span>
+    <span id="current-date" style="font-size:0.7rem; color:var(--fg-muted);"></span>
+  </div>
+
+  <div id="timer-body">
+    <div id="current-timer">
+      <select id="project-select">
+        <option value="">— Select a project —</option>
+      </select>
+      <input type="text" id="note-input" placeholder="What are you working on? (optional)" />
+      <div id="timer-display">00:00:00</div>
+      <button class="btn-timer btn-start" id="btn-toggle">▶ Start Timer</button>
+    </div>
+
+    <div id="projects-section">
+      <div class="section-title">Projects</div>
+      <div id="project-list"></div>
+      <div id="new-project">
+        <input type="text" id="new-project-name" placeholder="New project name..." />
+        <input type="number" id="new-project-rate" placeholder="$/hr" style="width:60px;" />
+        <button class="btn-add" id="btn-add-project">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+    let projects = [];
+    let activeEntryId = null;
+    let activeProjectId = null;
+    let timerInterval = null;
+    let startTime = null;
+
+    document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {
+      weekday: 'short', month: 'short', day: 'numeric'
+    });
+
+    async function loadProjects() {
+      const res = await fetch('/timer_projects', { headers: { 'Accept': 'application/json' } });
+      projects = await res.json();
+      renderProjects();
+      renderProjectSelect();
+      checkRunning();
+    }
+
+    function renderProjectSelect() {
+      const select = document.getElementById('project-select');
+      const current = select.value;
+      select.innerHTML = '<option value="">— Select a project —</option>';
+      projects.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = p.name;
+        select.appendChild(opt);
+      });
+      if (current) select.value = current;
+    }
+
+    function renderProjects() {
+      const list = document.getElementById('project-list');
+      if (projects.length === 0) {
+        list.innerHTML = '<div style="color:var(--fg-muted); font-size:0.75rem; padding:0.5rem 0;">No projects yet.</div>';
+        return;
+      }
+      list.innerHTML = projects.map(p => `
+        <div class="project-row">
+          <span style="font-family:var(--font-mono);">
+            ${p.running ? '<span class="project-running-dot"></span>' : ''}${p.name}
+          </span>
+          <span style="color:var(--accent-cyan); font-family:var(--font-mono); font-size:0.75rem;">${p.total_hours}h</span>
+          ${p.hourly_rate ? `<span style="color:var(--accent-yellow); font-family:var(--font-mono); font-size:0.75rem;">$${p.billable_amount}</span>` : ''}
+          <button class="btn-delete-project" data-id="${p.id}" style="background:none; border:none; color:var(--fg-muted); cursor:pointer; font-size:0.8rem;">✕</button>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.btn-delete-project').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const id = btn.dataset.id;
+          const project = projects.find(p => p.id === parseInt(id));
+          if (!confirm(`Delete "${project.name}" and all its time entries?`)) return;
+          await fetch(`/timer_projects/${id}`, {
+            method: 'DELETE',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+          await loadProjects();
+        });
+      });
+    }
+
+    function checkRunning() {
+      const running = projects.find(p => p.running);
+      if (running) {
+        activeProjectId = running.id;
+        activeEntryId = running.active_entry_id;
+        document.getElementById('project-select').value = running.id;
+        if (timerInterval) clearInterval(timerInterval);
+        startTimerDisplay();
+        updateToggleBtn(true);
+      }
+    }
+
+    function startTimerDisplay() {
+      if (timerInterval) clearInterval(timerInterval);
+      startTime = startTime || new Date();
+      timerInterval = setInterval(updateDisplay, 1000);
+    }
+
+    function updateDisplay() {
+      const elapsed = Math.floor((new Date() - startTime) / 1000);
+      const h = Math.floor(elapsed / 3600).toString().padStart(2, '0');
+      const m = Math.floor((elapsed % 3600) / 60).toString().padStart(2, '0');
+      const s = (elapsed % 60).toString().padStart(2, '0');
+      const display = document.getElementById('timer-display');
+      display.textContent = `${h}:${m}:${s}`;
+      display.style.color = 'var(--accent-green)';
+      display.style.textShadow = '0 0 12px var(--accent-green)';
+    }
+
+    function stopTimerDisplay() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+      startTime = null;
+      const display = document.getElementById('timer-display');
+      display.textContent = '00:00:00';
+      display.style.color = 'var(--accent-cyan)';
+      display.style.textShadow = '0 0 12px var(--accent-cyan)';
+    }
+
+    function updateToggleBtn(running) {
+      const btn = document.getElementById('btn-toggle');
+      if (running) {
+        btn.textContent = '■ Stop Timer';
+        btn.className = 'btn-timer btn-stop';
+      } else {
+        btn.textContent = '▶ Start Timer';
+        btn.className = 'btn-timer btn-start';
+      }
+    }
+
+    document.getElementById('project-select').addEventListener('change', async () => {
+      const selectedId = document.getElementById('project-select').value;
+      const runningProject = projects.find(p => p.running);
+      if (runningProject && runningProject.id !== parseInt(selectedId)) {
+        const confirmed = confirm(`Stop timer on "${runningProject.name}" and switch to this project?`);
+        if (!confirmed) {
+          document.getElementById('project-select').value = runningProject.id;
+          return;
+        }
+        if (activeEntryId) {
+          await fetch(`/timer_entries/${activeEntryId}`, {
+            method: 'PATCH',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+          activeEntryId = null;
+        }
+        stopTimerDisplay();
+        updateToggleBtn(false);
+        const res = await fetch('/timer_entries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ project_id: selectedId, note: '' })
+        });
+        const data = await res.json();
+        activeEntryId = data.id;
+        activeProjectId = parseInt(selectedId);
+        startTime = new Date();
+        startTimerDisplay();
+        updateToggleBtn(true);
+        await loadProjects();
+      }
+    });
+
+    document.getElementById('btn-toggle').addEventListener('click', async () => {
+      const projectId = document.getElementById('project-select').value;
+      const note = document.getElementById('note-input').value;
+
+      if (timerInterval) {
+        if (activeEntryId) {
+          await fetch(`/timer_entries/${activeEntryId}`, {
+            method: 'PATCH',
+            headers: { 'X-CSRF-Token': csrfToken }
+          });
+          activeEntryId = null;
+        }
+        stopTimerDisplay();
+        updateToggleBtn(false);
+        activeProjectId = null;
+        await loadProjects();
+      } else {
+        if (!projectId) { alert('Select a project first.'); return; }
+        const res = await fetch('/timer_entries', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+          body: JSON.stringify({ project_id: projectId, note })
+        });
+        const data = await res.json();
+        activeEntryId = data.id;
+        activeProjectId = parseInt(projectId);
+        startTime = new Date();
+        startTimerDisplay();
+        updateToggleBtn(true);
+        await loadProjects();
+      }
+    });
+
+    document.getElementById('btn-add-project').addEventListener('click', async () => {
+      const name = document.getElementById('new-project-name').value.trim();
+      const rate = document.getElementById('new-project-rate').value;
+      if (!name) return;
+      await fetch('/timer_projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ timer_project: { name, hourly_rate: rate || null } })
+      });
+      document.getElementById('new-project-name').value = '';
+      document.getElementById('new-project-rate').value = '';
+      await loadProjects();
+    });
+
+    document.getElementById('new-project-name').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('btn-add-project').click();
+    });
+
+    loadProjects();
+  </script>
+</body>
+</html>

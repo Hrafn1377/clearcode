@@ -77485,6 +77485,324 @@ Enter number:`);
     }
   };
 
+  // app/javascript/components/timer-panel.ts
+  var TimerPanel = class {
+    panel;
+    overlay;
+    csrfToken;
+    projects = [];
+    activeEntryId = null;
+    activeProjectId = null;
+    timerInterval = null;
+    startTime = null;
+    constructor() {
+      this.csrfToken = document.querySelector('meta[name="csrf-token"]')?.content ?? "";
+      this.panel = this.buildPanel();
+      this.overlay = this.buildOverlay();
+      document.body.appendChild(this.overlay);
+      document.body.appendChild(this.panel);
+      this.addStyles();
+      const popoutBtn = this.panel.querySelector("#timer-popout");
+      popoutBtn.onclick = () => {
+        window.open(
+          "/timer",
+          "ClearCodeTimer",
+          "width=340,height=600,resizable=yes,scrollbars=no"
+        );
+      };
+    }
+    buildOverlay() {
+      const overlay = document.createElement("div");
+      overlay.id = "timer-overlay";
+      overlay.style.cssText = `
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 99;
+    `;
+      overlay.addEventListener("click", () => this.close());
+      return overlay;
+    }
+    buildPanel() {
+      const panel = document.createElement("div");
+      panel.id = "timer-panel";
+      panel.innerHTML = `
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:1.5rem 1.5rem 1rem; border-bottom:1px solid var(--border);">
+  <span style="color:var(--accent-yellow); font-size:0.85rem; letter-spacing:0.1em; text-transform:uppercase;">\u23F1 Timer</span>
+  <div style="display:flex; align-items:center; gap:0.5rem;">
+    <button id="timer-popout" style="background:none; border:none; color:var(--fg-muted); cursor:pointer; font-size:0.9rem;" title="Pop out timer">\u2922</button>
+    <button id="timer-close" style="background:none; border:none; color:var(--fg-muted); cursor:pointer; font-size:1.2rem;">\xD7</button>
+  </div>
+</div>
+
+
+      <div style="padding:1rem 1.5rem;">
+        <select id="timer-project-select" style="width:100%; background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:0.4rem 0.5rem; color:var(--fg); font-family:var(--font-mono); font-size:0.8rem; outline:none; margin-bottom:0.5rem;">
+          <option value="">\u2014 Select a project \u2014</option>
+        </select>
+        <input type="text" id="timer-note" placeholder="What are you working on? (optional)"
+          style="width:100%; background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:0.4rem 0.5rem; color:var(--fg); font-family:var(--font-mono); font-size:0.75rem; outline:none; margin-bottom:0.75rem;" />
+        <div id="timer-display" style="font-family:var(--font-mono); font-size:2.5rem; color:var(--accent-cyan); text-shadow:0 0 12px var(--accent-cyan); text-align:center; margin:0.5rem 0; letter-spacing:0.05em;">00:00:00</div>
+        <button id="timer-toggle" style="width:100%; border:none; border-radius:4px; padding:0.6rem; font-family:var(--font-mono); font-size:0.85rem; cursor:pointer; font-weight:bold; background:var(--accent-green); color:var(--bg);">\u25B6 Start Timer</button>
+      </div>
+
+      <div style="padding:0 1.5rem 1rem;">
+        <div style="font-size:0.7rem; color:var(--fg-muted); text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.75rem;">Projects</div>
+        <div id="timer-project-list"></div>
+        <div style="display:flex; gap:0.5rem; margin-top:0.75rem;">
+          <input type="text" id="timer-new-project" placeholder="New project..." 
+            style="flex:1; background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:0.4rem 0.5rem; color:var(--fg); font-family:var(--font-mono); font-size:0.75rem; outline:none;" />
+          <input type="number" id="timer-new-rate" placeholder="$/hr"
+            style="width:60px; background:var(--bg-surface); border:1px solid var(--border); border-radius:4px; padding:0.4rem 0.5rem; color:var(--fg); font-family:var(--font-mono); font-size:0.75rem; outline:none;" />
+          <button id="timer-add-project" style="background:var(--accent-cyan); border:none; border-radius:4px; padding:0.4rem 0.75rem; color:var(--bg); font-family:var(--font-mono); font-size:0.75rem; cursor:pointer;">+</button>
+        </div>
+      </div>
+    `;
+      return panel;
+    }
+    addStyles() {
+      if (document.getElementById("timer-panel-styles"))
+        return;
+      const style = document.createElement("style");
+      style.id = "timer-panel-styles";
+      style.textContent = `
+      #timer-panel {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 340px;
+        height: 100dvh;
+        background: var(--bg-panel);
+        border-left: 1px solid var(--accent-yellow);
+        z-index: 100;
+        flex-direction: column;
+        box-shadow: -4px 0 30px #ffe60033;
+        font-family: var(--font-ui);
+        color: var(--fg);
+        overflow-y: auto;
+      }
+      #timer-panel.open { display: flex; flex-direction: column; }
+      .timer-project-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+        border-bottom: 1px solid var(--border);
+        font-size: 0.8rem;
+      }
+      .timer-project-row:last-child { border-bottom: none; }
+      .timer-running-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: var(--accent-green);
+        box-shadow: 0 0 6px var(--accent-green);
+        display: inline-block;
+        margin-right: 0.4rem;
+      }
+    `;
+      document.head.appendChild(style);
+    }
+    async open() {
+      this.panel.classList.add("open");
+      this.overlay.style.display = "block";
+      await this.loadProjects();
+      this.wireEvents();
+    }
+    close() {
+      this.panel.classList.remove("open");
+      this.overlay.style.display = "none";
+    }
+    async loadProjects() {
+      const res = await fetch("/timer_projects", { headers: { "Accept": "application/json" } });
+      this.projects = await res.json();
+      this.renderProjects();
+      this.renderProjectSelect();
+      this.checkRunning();
+    }
+    renderProjectSelect() {
+      const select = this.panel.querySelector("#timer-project-select");
+      const current = select.value;
+      select.innerHTML = '<option value="">\u2014 Select a project \u2014</option>';
+      this.projects.forEach((p4) => {
+        const opt = document.createElement("option");
+        opt.value = p4.id;
+        opt.textContent = p4.name;
+        select.appendChild(opt);
+      });
+      if (current)
+        select.value = current;
+    }
+    renderProjects() {
+      const list = this.panel.querySelector("#timer-project-list");
+      if (this.projects.length === 0) {
+        list.innerHTML = '<div style="color:var(--fg-muted); font-size:0.75rem; padding:0.5rem 0;">No projects yet.</div>';
+        return;
+      }
+      list.innerHTML = this.projects.map((p4) => `
+      <div class="timer-project-row">
+        <span style="font-family:var(--font-mono); color:var(--fg);">
+          ${p4.running ? '<span class="timer-running-dot"></span>' : ""}${p4.name}
+        </span>
+        <span style="color:var(--accent-cyan); font-family:var(--font-mono); font-size:0.75rem;">${p4.total_hours}h</span>
+        ${p4.hourly_rate ? `<span style="color:var(--accent-yellow); font-family:var(--font-mono); font-size:0.75rem;">$${p4.billable_amount}</span>` : ""}
+        <button class="timer-btn-delete" data-id="${p4.id}" style="background:none; border:none; color:var(--fg-muted); cursor:pointer; font-size:0.8rem;">\u2715</button>
+      </div>
+    `).join("");
+      list.querySelectorAll(".timer-btn-delete").forEach((btn) => {
+        btn.addEventListener("click", async () => {
+          const id3 = btn.dataset.id;
+          const project = this.projects.find((p4) => p4.id === parseInt(id3));
+          if (!confirm(`Delete "${project.name}" and all its time entries?`))
+            return;
+          await fetch(`/timer_projects/${id3}`, {
+            method: "DELETE",
+            headers: { "X-CSRF-Token": this.csrfToken }
+          });
+          await this.loadProjects();
+        });
+      });
+    }
+    checkRunning() {
+      const running = this.projects.find((p4) => p4.running);
+      if (running) {
+        this.activeProjectId = running.id;
+        this.activeEntryId = running.active_entry_id;
+        const select = this.panel.querySelector("#timer-project-select");
+        select.value = running.id;
+        if (this.timerInterval)
+          clearInterval(this.timerInterval);
+        this.startTimerDisplay();
+        this.updateToggleBtn(true);
+      }
+    }
+    startTimerDisplay() {
+      if (this.timerInterval)
+        clearInterval(this.timerInterval);
+      this.startTime = this.startTime || /* @__PURE__ */ new Date();
+      this.timerInterval = setInterval(() => this.updateDisplay(), 1e3);
+    }
+    updateDisplay() {
+      const elapsed = Math.floor(((/* @__PURE__ */ new Date()).getTime() - this.startTime.getTime()) / 1e3);
+      const h5 = Math.floor(elapsed / 3600).toString().padStart(2, "0");
+      const m5 = Math.floor(elapsed % 3600 / 60).toString().padStart(2, "0");
+      const s = (elapsed % 60).toString().padStart(2, "0");
+      const display = this.panel.querySelector("#timer-display");
+      display.textContent = `${h5}:${m5}:${s}`;
+      display.style.color = "var(--accent-green)";
+      display.style.textShadow = "0 0 12px var(--accent-green)";
+    }
+    stopTimerDisplay() {
+      if (this.timerInterval)
+        clearInterval(this.timerInterval);
+      this.timerInterval = null;
+      this.startTime = null;
+      const display = this.panel.querySelector("#timer-display");
+      display.textContent = "00:00:00";
+      display.style.color = "var(--accent-cyan)";
+      display.style.textShadow = "0 0 12px var(--accent-cyan)";
+    }
+    updateToggleBtn(running) {
+      const btn = this.panel.querySelector("#timer-toggle");
+      if (running) {
+        btn.textContent = "\u25A0 Stop Timer";
+        btn.style.background = "var(--accent-pink)";
+      } else {
+        btn.textContent = "\u25B6 Start Timer";
+        btn.style.background = "var(--accent-green)";
+      }
+    }
+    wireEvents() {
+      const closeBtn = this.panel.querySelector("#timer-close");
+      const toggleBtn = this.panel.querySelector("#timer-toggle");
+      const addBtn = this.panel.querySelector("#timer-add-project");
+      const select = this.panel.querySelector("#timer-project-select");
+      closeBtn.onclick = () => this.close();
+      select.addEventListener("change", async () => {
+        const selectedId = select.value;
+        const runningProject = this.projects.find((p4) => p4.running);
+        if (runningProject && runningProject.id !== parseInt(selectedId)) {
+          const confirmed = confirm(`Stop timer on "${runningProject.name}" and switch to this project?`);
+          if (!confirmed) {
+            select.value = String(runningProject.id);
+            return;
+          }
+          if (this.activeEntryId) {
+            await fetch(`/timer_entries/${this.activeEntryId}`, {
+              method: "PATCH",
+              headers: { "X-CSRF-Token": this.csrfToken }
+            });
+            this.activeEntryId = null;
+          }
+          this.stopTimerDisplay();
+          this.updateToggleBtn(false);
+          const res = await fetch("/timer_entries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": this.csrfToken },
+            body: JSON.stringify({ project_id: selectedId, note: "" })
+          });
+          const data2 = await res.json();
+          this.activeEntryId = data2.id;
+          this.activeProjectId = parseInt(selectedId);
+          this.startTime = /* @__PURE__ */ new Date();
+          this.startTimerDisplay();
+          this.updateToggleBtn(true);
+          await this.loadProjects();
+        }
+      });
+      toggleBtn.addEventListener("click", async () => {
+        const projectId = select.value;
+        const note = this.panel.querySelector("#timer-note").value;
+        if (this.timerInterval) {
+          if (this.activeEntryId) {
+            await fetch(`/timer_entries/${this.activeEntryId}`, {
+              method: "PATCH",
+              headers: { "X-CSRF-Token": this.csrfToken }
+            });
+            this.activeEntryId = null;
+          }
+          this.stopTimerDisplay();
+          this.updateToggleBtn(false);
+          this.activeProjectId = null;
+          await this.loadProjects();
+        } else {
+          if (!projectId) {
+            alert("Select a project first.");
+            return;
+          }
+          const res = await fetch("/timer_entries", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-CSRF-Token": this.csrfToken },
+            body: JSON.stringify({ project_id: projectId, note })
+          });
+          const data2 = await res.json();
+          this.activeEntryId = data2.id;
+          this.activeProjectId = parseInt(projectId);
+          this.startTime = /* @__PURE__ */ new Date();
+          this.startTimerDisplay();
+          this.updateToggleBtn(true);
+          await this.loadProjects();
+        }
+      });
+      addBtn.addEventListener("click", async () => {
+        const name2 = this.panel.querySelector("#timer-new-project").value.trim();
+        const rate = this.panel.querySelector("#timer-new-rate").value;
+        if (!name2)
+          return;
+        await fetch("/timer_projects", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-CSRF-Token": this.csrfToken },
+          body: JSON.stringify({ timer_project: { name: name2, hourly_rate: rate || null } })
+        });
+        this.panel.querySelector("#timer-new-project").value = "";
+        this.panel.querySelector("#timer-new-rate").value = "";
+        await this.loadProjects();
+      });
+    }
+  };
+
   // app/javascript/application.ts
   console.log("[ClearCode] script loaded");
   function boot() {
@@ -77510,6 +77828,7 @@ Enter number:`);
       },
       () => editor.getContent()
     );
+    const timerPanel = new TimerPanel();
     new TutorialSystem();
     fileManager.loadFiles();
     editor.setOnUpdate(() => preview.update());
@@ -77553,6 +77872,9 @@ Enter number:`);
         splitBtn.style.color = splitPane.isActive() ? "var(--accent-cyan)" : "";
       });
     }
+    const timerBtn = document.getElementById("timer-btn");
+    if (timerBtn)
+      timerBtn.addEventListener("click", () => timerPanel.open());
     document.addEventListener("keydown", (e) => {
       if (e.metaKey && e.altKey && e.key === "f") {
         e.preventDefault();
@@ -77593,7 +77915,7 @@ Enter number:`);
         focusBtn?.click();
       }
     });
-    window.__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor };
+    window.__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor, splitPane, timerPanel };
   }
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", boot);

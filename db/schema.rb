@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_23_204402) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_25_205535) do
   create_table "code_files", force: :cascade do |t|
     t.text "content", default: ""
     t.datetime "created_at", null: false
@@ -31,6 +31,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_23_204402) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["user_id"], name: "index_projects_on_user_id"
+  end
+
+  create_table "timer_entries", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "end_time"
+    t.string "note"
+    t.datetime "start_time"
+    t.integer "timer_project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["timer_project_id"], name: "index_timer_entries_on_timer_project_id"
+  end
+
+  create_table "timer_projects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.decimal "hourly_rate"
+    t.string "name"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_timer_projects_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -55,4 +74,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_23_204402) do
   add_foreign_key "code_files", "projects"
   add_foreign_key "code_files", "users"
   add_foreign_key "projects", "users"
+  add_foreign_key "timer_entries", "timer_projects"
+  add_foreign_key "timer_projects", "users"
 end

@@ -270,6 +270,9 @@ export class SettingsPanel {
 
     closeBtn.onclick = () => this.close();
 
+  
+
+
     const customizeBtn = this.panel.querySelector('#settings-customize-palette') as HTMLButtonElement;
 
     const updateCustomizeBtn = (themeId: string) => {

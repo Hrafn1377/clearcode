@@ -12,6 +12,7 @@ import { checkForUpdates } from "./utils/version-check";
 import { AIPanel } from "./components/ai-panel";
 import { PaletteEditor } from "./components/palette-editor";
 import { SplitPane } from "./components/split-pane";
+import { TimerPanel } from "./components/timer-panel";
 
 console.log("[ClearCode] script loaded");
 
@@ -38,6 +39,7 @@ function boot() {
       },
       () => editor.getContent()
     );  
+    const timerPanel = new TimerPanel();
     new TutorialSystem();
 
     fileManager.loadFiles();
@@ -87,6 +89,9 @@ if (splitBtn) {
   });
 }
 
+    const timerBtn = document.getElementById("timer-btn");
+    if (timerBtn) timerBtn.addEventListener("click", () => timerPanel.open());
+
 
    document.addEventListener('keydown', (e) => {
   if (e.metaKey && e.altKey && e.key === 'f') {
@@ -131,8 +136,8 @@ if (splitBtn) {
             focusBtn?.click();
         }
     });
+(window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor, splitPane, timerPanel };
 
-    (window as any).__clearcode = { editor, themeManager, tts, git, preview, fileManager, projectManager, projectSwitcher, settings, aiPanel, paletteEditor };
 }
 
 if (document.readyState === "loading") {
