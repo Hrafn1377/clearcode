@@ -39,6 +39,47 @@ class QuotesController < ApplicationController
     head :no_content
   end
 
+  def convert_to_invoice
+  quote = current_user.quotes.find(params[:id])
+  invoice = current_user.invoices.build(
+    client_id: quote.client_id,
+    quote_id: quote.id,
+    issue_date: Date.today,
+    due_date: Date.today + 30,
+    tax1_label: quote.tax1_label,
+    tax1_rate: quote.tax1_rate,
+    tax2_label: quote.tax2_label,
+    tax2_rate: quote.tax2_rate,
+    tax3_label: quote.tax3_label,
+    tax3_rate: quote.tax3_rate,
+    tax4_label: quote.tax4_label,
+    tax4_rate: quote.tax4_rate,
+    discount_type: quote.discount_type,
+    discount_amount: quote.discount_amount,
+    payment_method: quote.payment_method,
+    terms_and_conditions: quote.terms_and_conditions,
+    notes: quote.notes,
+  )
+
+  if invoice.save
+    quote.quote_line_items.each_with_index do |item, i|
+      invoice.invoice_line_items.create!(
+        description: item.description,
+        billing_type: item.billing_type,
+        quantity: item.quantity,
+        rate: item.rate,
+        sort_order: i
+      )
+    end
+    invoice.calculate_totals
+    quote.update!(status: 'invoiced')
+    render json: { invoice_id: invoice.id, invoice_number: invoice.invoice_number }, status: :created
+  else
+    render json: { errors: invoice.errors.full_messages }, status: :unprocessable_entity
+  end
+end
+
+
   private
 
   def quote_json(quote, include_items: false)

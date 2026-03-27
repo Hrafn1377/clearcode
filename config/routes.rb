@@ -1,13 +1,4 @@
 Rails.application.routes.draw do
-  get "quotes/index"
-  get "quotes/show"
-  get "quotes/create"
-  get "quotes/update"
-  get "quotes/destroy"
-  get "clients/index"
-  get "clients/create"
-  get "clients/update"
-  get "clients/destroy"
   root "editor#index"
   get '/timer', to: 'timer#index'
 
@@ -28,8 +19,14 @@ Rails.application.routes.draw do
   resources :timer_projects, only: [:index, :create, :update, :destroy]
   resources :timer_entries, only: [:create, :update, :destroy]
   resources :clients, only: [:index, :create, :update, :destroy]
-  resources :quotes, only: [:index, :show, :create, :update, :destroy]
 
+  resources :quotes, only: [:index, :show, :create, :update, :destroy] do
+    member do
+      post :convert_to_invoice
+    end
+  end
+
+  resources :invoices, only: [:index, :show, :create, :update, :destroy]
 
   resource :settings, only: [:show, :update]
 

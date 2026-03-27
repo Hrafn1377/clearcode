@@ -407,7 +407,8 @@ export class QuotePanel {
         <div class="quote-card-detail" style="color:var(--accent-yellow);">Total: $${q.total || '0.00'}</div>
         <div class="quote-card-actions">
           <button class="btn-edit-quote" data-id="${q.id}">Edit</button>
-          <button class="btn-status-quote" data-id="${q.id}">Update Status</button>
+          <button class="btn-convert-quote" data-id="${q.id}">→ Invoice</button>
+          <button class="btn-status-quote" data-id="${q.id}">Status</button>
           <button class="btn-delete-quote" data-id="${q.id}">Delete</button>
         </div>
       </div>
@@ -433,6 +434,21 @@ export class QuotePanel {
         await this.loadQuotes();
       });
     });
+    list.querySelectorAll('.btn-convert-quote').forEach(btn => {
+  btn.addEventListener('click', async () => {
+    const id = (btn as HTMLElement).dataset.id!;
+    if (!confirm('Convert this quote to an invoice?')) return;
+    const res = await fetch(`/quotes/${id}/convert_to_invoice`, {
+      method: 'POST',
+      headers: { 'X-CSRF-Token': this.csrfToken }
+    });
+    if (res.ok) {
+      alert('Invoice created successfully!');
+      await this.loadQuotes();
+    }
+  });
+});
+
 
     list.querySelectorAll('.btn-delete-quote').forEach(btn => {
       btn.addEventListener('click', async () => {

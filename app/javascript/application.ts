@@ -15,6 +15,7 @@ import { SplitPane } from "./components/split-pane";
 import { TimerPanel } from "./components/timer-panel";
 import { ClientPanel } from "./components/client-panel";
 import { QuotePanel } from "./components/quote-panel";
+import { InvoicePanel } from "./components/invoice-panel";
 
 console.log("[ClearCode] script loaded");
 
@@ -44,6 +45,7 @@ function boot() {
     const timerPanel = new TimerPanel();
     const clientPanel = new ClientPanel();
     const quotePanel = new QuotePanel();
+    const invoicePanel = new InvoicePanel();
     new TutorialSystem();
 
     fileManager.loadFiles();
@@ -101,6 +103,9 @@ if (splitBtn) {
 
     const quoteBtn = document.getElementById("quote-btn");
     if (quoteBtn) quoteBtn.addEventListener("click", () => quotePanel.open());
+
+    const invoiceBtn = document.getElementById("invoice-btn");
+    if (invoiceBtn) invoiceBtn.addEventListener("click", () => invoicePanel.open());
 
 
    document.addEventListener('keydown', (e) => {

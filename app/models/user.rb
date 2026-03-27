@@ -5,6 +5,7 @@ class User < ApplicationRecord
   has_many :timer_projects, dependent: :destroy
   has_many :clients, dependent: :destroy
   has_many :quotes, dependent: :destroy
+  has_many :invoices, dependent: :destroy
 
   VALID_THEMES = %w[
     synthwave-2077 nordic-frost obsidian solarized-dark solarized-light dracula one-dark

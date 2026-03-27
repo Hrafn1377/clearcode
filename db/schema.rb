@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_193720) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_212329) do
   create_table "clients", force: :cascade do |t|
     t.string "address"
     t.string "billing_type"
@@ -42,6 +42,50 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_193720) do
     t.integer "user_id", null: false
     t.index ["project_id"], name: "index_code_files_on_project_id"
     t.index ["user_id"], name: "index_code_files_on_user_id"
+  end
+
+  create_table "invoice_line_items", force: :cascade do |t|
+    t.string "billing_type"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.integer "invoice_id", null: false
+    t.decimal "quantity"
+    t.decimal "rate"
+    t.integer "sort_order"
+    t.decimal "total"
+    t.datetime "updated_at", null: false
+    t.index ["invoice_id"], name: "index_invoice_line_items_on_invoice_id"
+  end
+
+  create_table "invoices", force: :cascade do |t|
+    t.decimal "amount_paid"
+    t.integer "client_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "discount_amount"
+    t.string "discount_type"
+    t.date "due_date"
+    t.string "invoice_number"
+    t.date "issue_date"
+    t.text "notes"
+    t.string "payment_method"
+    t.integer "quote_id", null: false
+    t.string "status"
+    t.decimal "subtotal"
+    t.string "tax1_label"
+    t.decimal "tax1_rate"
+    t.string "tax2_label"
+    t.decimal "tax2_rate"
+    t.string "tax3_label"
+    t.decimal "tax3_rate"
+    t.string "tax4_label"
+    t.decimal "tax4_rate"
+    t.text "terms_and_conditions"
+    t.decimal "total"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["client_id"], name: "index_invoices_on_client_id"
+    t.index ["quote_id"], name: "index_invoices_on_quote_id"
+    t.index ["user_id"], name: "index_invoices_on_user_id"
   end
 
   create_table "projects", force: :cascade do |t|
@@ -141,6 +185,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_193720) do
   add_foreign_key "clients", "users"
   add_foreign_key "code_files", "projects"
   add_foreign_key "code_files", "users"
+  add_foreign_key "invoice_line_items", "invoices"
+  add_foreign_key "invoices", "clients"
+  add_foreign_key "invoices", "quotes"
+  add_foreign_key "invoices", "users"
   add_foreign_key "projects", "users"
   add_foreign_key "quote_line_items", "quotes"
   add_foreign_key "quotes", "clients"
