@@ -13,6 +13,7 @@ import { AIPanel } from "./components/ai-panel";
 import { PaletteEditor } from "./components/palette-editor";
 import { SplitPane } from "./components/split-pane";
 import { TimerPanel } from "./components/timer-panel";
+import { ClientPanel } from "./components/client-panel";
 
 console.log("[ClearCode] script loaded");
 
@@ -40,6 +41,7 @@ function boot() {
       () => editor.getContent()
     );  
     const timerPanel = new TimerPanel();
+    const clientPanel = new ClientPanel();
     new TutorialSystem();
 
     fileManager.loadFiles();
@@ -91,6 +93,9 @@ if (splitBtn) {
 
     const timerBtn = document.getElementById("timer-btn");
     if (timerBtn) timerBtn.addEventListener("click", () => timerPanel.open());
+
+    const clientBtn = document.getElementById("client-btn");
+    if (clientBtn) clientBtn.addEventListener("click", () => clientPanel.open());
 
 
    document.addEventListener('keydown', (e) => {

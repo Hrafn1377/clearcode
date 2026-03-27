@@ -10,7 +10,28 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_205535) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_26_170900) do
+  create_table "clients", force: :cascade do |t|
+    t.string "address"
+    t.string "billing_type"
+    t.string "city"
+    t.string "company"
+    t.datetime "created_at", null: false
+    t.string "email"
+    t.decimal "hourly_rate"
+    t.string "name"
+    t.text "notes"
+    t.string "phone"
+    t.decimal "rate_per_page"
+    t.decimal "rate_per_word"
+    t.string "state"
+    t.boolean "tax_exempt"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.string "zip"
+    t.index ["user_id"], name: "index_clients_on_user_id"
+  end
+
   create_table "code_files", force: :cascade do |t|
     t.text "content", default: ""
     t.datetime "created_at", null: false
@@ -71,6 +92,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_205535) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "clients", "users"
   add_foreign_key "code_files", "projects"
   add_foreign_key "code_files", "users"
   add_foreign_key "projects", "users"
