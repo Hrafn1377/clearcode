@@ -14,6 +14,7 @@ import { PaletteEditor } from "./components/palette-editor";
 import { SplitPane } from "./components/split-pane";
 import { TimerPanel } from "./components/timer-panel";
 import { ClientPanel } from "./components/client-panel";
+import { QuotePanel } from "./components/quote-panel";
 
 console.log("[ClearCode] script loaded");
 
@@ -42,6 +43,7 @@ function boot() {
     );  
     const timerPanel = new TimerPanel();
     const clientPanel = new ClientPanel();
+    const quotePanel = new QuotePanel();
     new TutorialSystem();
 
     fileManager.loadFiles();
@@ -96,6 +98,9 @@ if (splitBtn) {
 
     const clientBtn = document.getElementById("client-btn");
     if (clientBtn) clientBtn.addEventListener("click", () => clientPanel.open());
+
+    const quoteBtn = document.getElementById("quote-btn");
+    if (quoteBtn) quoteBtn.addEventListener("click", () => quotePanel.open());
 
 
    document.addEventListener('keydown', (e) => {

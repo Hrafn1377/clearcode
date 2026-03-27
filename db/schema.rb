@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_26_170900) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_193720) do
   create_table "clients", force: :cascade do |t|
     t.string "address"
     t.string "billing_type"
@@ -52,6 +52,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_170900) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["user_id"], name: "index_projects_on_user_id"
+  end
+
+  create_table "quote_line_items", force: :cascade do |t|
+    t.string "billing_type"
+    t.datetime "created_at", null: false
+    t.string "description"
+    t.decimal "quantity"
+    t.integer "quote_id", null: false
+    t.decimal "rate"
+    t.integer "sort_order"
+    t.decimal "total"
+    t.datetime "updated_at", null: false
+    t.index ["quote_id"], name: "index_quote_line_items_on_quote_id"
+  end
+
+  create_table "quotes", force: :cascade do |t|
+    t.integer "client_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "deposit_amount"
+    t.decimal "deposit_percent"
+    t.string "deposit_type"
+    t.decimal "discount_amount"
+    t.string "discount_type"
+    t.date "issue_date"
+    t.text "notes"
+    t.string "payment_method"
+    t.string "payment_terms"
+    t.string "quote_number"
+    t.string "state_clause"
+    t.string "status"
+    t.decimal "subtotal"
+    t.string "tax1_label"
+    t.decimal "tax1_rate"
+    t.string "tax2_label"
+    t.decimal "tax2_rate"
+    t.string "tax3_label"
+    t.decimal "tax3_rate"
+    t.string "tax4_label"
+    t.decimal "tax4_rate"
+    t.text "terms_and_conditions"
+    t.decimal "total"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.date "validity_date"
+    t.index ["client_id"], name: "index_quotes_on_client_id"
+    t.index ["user_id"], name: "index_quotes_on_user_id"
   end
 
   create_table "timer_entries", force: :cascade do |t|
@@ -96,6 +142,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_26_170900) do
   add_foreign_key "code_files", "projects"
   add_foreign_key "code_files", "users"
   add_foreign_key "projects", "users"
+  add_foreign_key "quote_line_items", "quotes"
+  add_foreign_key "quotes", "clients"
+  add_foreign_key "quotes", "users"
   add_foreign_key "timer_entries", "timer_projects"
   add_foreign_key "timer_projects", "users"
 end
