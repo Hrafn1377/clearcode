@@ -25,3 +25,7 @@ group :development do
   gem "web-console"
 end
 gem "rubyzip", "~> 3.2"
+gem "prawn"
+gem "prawn-table"
+gem "matrix"
+gem "docx"

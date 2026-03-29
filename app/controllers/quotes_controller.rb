@@ -79,6 +79,14 @@ class QuotesController < ApplicationController
   end
 end
 
+def export_pdf
+  quote = current_user.quotes.find(params[:id])
+  pdf_data = ExportService.quote_to_pdf(quote)
+  send_data pdf_data,
+    filename: "#{quote.quote_number}.pdf",
+    type: "application/pdf",
+    disposition: "attachment"
+end
 
   private
 

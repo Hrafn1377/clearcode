@@ -23,10 +23,15 @@ Rails.application.routes.draw do
   resources :quotes, only: [:index, :show, :create, :update, :destroy] do
     member do
       post :convert_to_invoice
+      get  :export_pdf
     end
   end
 
-  resources :invoices, only: [:index, :show, :create, :update, :destroy]
+  resources :invoices, only: [:index, :show, :create, :update, :destroy] do
+    member do
+      get :export_pdf
+    end
+  end
 
   resource :settings, only: [:show, :update]
 

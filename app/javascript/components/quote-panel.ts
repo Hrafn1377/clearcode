@@ -408,6 +408,7 @@ export class QuotePanel {
         <div class="quote-card-actions">
           <button class="btn-edit-quote" data-id="${q.id}">Edit</button>
           <button class="btn-convert-quote" data-id="${q.id}">→ Invoice</button>
+          <button class="btn-export-pdf-quote" data-id="${q.id}">⬇️ PDF</button>
           <button class="btn-status-quote" data-id="${q.id}">Status</button>
           <button class="btn-delete-quote" data-id="${q.id}">Delete</button>
         </div>
@@ -448,6 +449,13 @@ export class QuotePanel {
     }
   });
 });
+
+     list.querySelectorAll('.btn-export-pdf-quote').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            window.location.href = `/quotes/${id}/export_pdf`;
+        });
+     });
 
 
     list.querySelectorAll('.btn-delete-quote').forEach(btn => {

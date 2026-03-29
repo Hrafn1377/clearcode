@@ -78557,6 +78557,7 @@ Enter number:`);
         <div class="quote-card-actions">
           <button class="btn-edit-quote" data-id="${q8.id}">Edit</button>
           <button class="btn-convert-quote" data-id="${q8.id}">\u2192 Invoice</button>
+          <button class="btn-export-pdf-quote" data-id="${q8.id}">\u2B07\uFE0F PDF</button>
           <button class="btn-status-quote" data-id="${q8.id}">Status</button>
           <button class="btn-delete-quote" data-id="${q8.id}">Delete</button>
         </div>
@@ -78595,6 +78596,12 @@ Enter number:`);
             alert("Invoice created successfully!");
             await this.loadQuotes();
           }
+        });
+      });
+      list.querySelectorAll(".btn-export-pdf-quote").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id3 = btn.dataset.id;
+          window.location.href = `/quotes/${id3}/export_pdf`;
         });
       });
       list.querySelectorAll(".btn-delete-quote").forEach((btn) => {
@@ -79104,10 +79111,11 @@ Enter number:`);
         <div class="invoice-card-detail" style="color:${inv.amount_due > 0 ? "var(--accent-pink)" : "var(--accent-green)"};">
           ${inv.amount_due > 0 ? `Due: $${inv.amount_due}` : "\u2713 Paid"}
         </div>
-        <div class="invoice-card-actions">
-          <button class="btn-edit-invoice" data-id="${inv.id}">Edit</button>
-          <button class="btn-delete-invoice" data-id="${inv.id}">Delete</button>
-        </div>
+       <div class="invoice-card-actions">
+  <button class="btn-edit-invoice" data-id="${inv.id}">Edit</button>
+  <button class="btn-export-pdf-invoice" data-id="${inv.id}">\u2193 PDF</button>
+  <button class="btn-delete-invoice" data-id="${inv.id}">Delete</button>
+</div>
       </div>
     `).join("");
       list.querySelectorAll(".btn-edit-invoice").forEach((btn) => {
@@ -79127,6 +79135,12 @@ Enter number:`);
             headers: { "X-CSRF-Token": this.csrfToken }
           });
           await this.loadInvoices();
+        });
+      });
+      list.querySelectorAll(".btn-export-pdf-invoice").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id3 = btn.dataset.id;
+          window.location.href = `/invoices/${id3}/export_pdf`;
         });
       });
     }

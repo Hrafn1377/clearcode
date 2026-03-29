@@ -370,10 +370,11 @@ export class InvoicePanel {
         <div class="invoice-card-detail" style="color:${inv.amount_due > 0 ? 'var(--accent-pink)' : 'var(--accent-green)'};">
           ${inv.amount_due > 0 ? `Due: $${inv.amount_due}` : '✓ Paid'}
         </div>
-        <div class="invoice-card-actions">
-          <button class="btn-edit-invoice" data-id="${inv.id}">Edit</button>
-          <button class="btn-delete-invoice" data-id="${inv.id}">Delete</button>
-        </div>
+       <div class="invoice-card-actions">
+  <button class="btn-edit-invoice" data-id="${inv.id}">Edit</button>
+  <button class="btn-export-pdf-invoice" data-id="${inv.id}">↓ PDF</button>
+  <button class="btn-delete-invoice" data-id="${inv.id}">Delete</button>
+</div>
       </div>
     `).join('');
 
@@ -395,6 +396,13 @@ export class InvoicePanel {
         });
         await this.loadInvoices();
       });
+    });
+
+    list.querySelectorAll('.btn-export-pdf-invoice').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const id = (btn as HTMLElement).dataset.id!;
+            window.location.href = `/invoices/${id}/export_pdf`;
+        });
     });
   }
 

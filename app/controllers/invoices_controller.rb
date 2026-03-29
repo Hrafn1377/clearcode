@@ -39,6 +39,15 @@ class InvoicesController < ApplicationController
     head :no_content
   end
 
+  def export_pdf
+    invoice = current_user.invoices.find(params[:id])
+    pdf_data = ExportService.invoice_to_pdf(invoice)
+    send_data pdf_data,
+      filename: "#{invoice.invoice_number}.pdf",
+      type: "application/pdf",
+      disposition: "attachment"
+  end
+
   private
 
   def invoice_json(invoice, include_items: false)
