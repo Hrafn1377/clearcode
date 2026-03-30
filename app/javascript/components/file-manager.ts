@@ -85,6 +85,23 @@ export class FileManager {
     this.showSavedFeedback();
   }
 
+  private async createFileFromImport(name: string, content: string): Promise<void> {
+    await fetch('/code_files', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': this.csrfToken,
+      },
+      body: JSON.stringify({
+        code_file: {
+          name,
+          content,
+          project_id: this.projectFilter || null,
+        }
+      }),
+    });
+  }
+
   private showSavedFeedback(): void {
     console.log("[ClearCode] showSavedFeedback called");
   const el = document.getElementById("status-cursor");
@@ -136,6 +153,7 @@ export class FileManager {
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
         <button class="btn-save" id="btn-save-file">↓ Save</button>
+        <button class="btn-import" id="btn-import-file">ꜛ Import</button>
         <button class="btn-gist" id="btn-backup-gist">☁ Gist</button>
       </div>
       <ul class="file-list">
@@ -155,6 +173,22 @@ export class FileManager {
 
     document.getElementById("btn-save-file")?.addEventListener("click", () => {
       this.saveCurrentFile();
+    });
+
+    document.getElementById("btn-import-file")?.addEventListener("click", () => {
+      const input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.accept = ".js,.ts,.jsx,.tsx,.html,.css,.scss,.json,.md,.rb,.py,.rs,.go,.java,.c,.cpp,.txt";
+      input.addEventListener("change", async () => {
+        const importedFiles = Array.from(input.files || []);
+        for (const file of importedFiles) {
+          const content = await file.text();
+          await this.createFileFromImport(file.name, content);
+        }
+        await this.loadFiles();
+      });
+      input.click();
     });
 
     document.getElementById("btn-backup-gist")?.addEventListener("click", async () => {

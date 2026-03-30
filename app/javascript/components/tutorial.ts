@@ -1,4 +1,4 @@
-const APP_VERSION = "3.0.0";
+const APP_VERSION = "3.1.0";
 const TUTORIAL_KEY = "clearcode_tutorial_version";
 
 const STEPS = [
@@ -14,7 +14,7 @@ const STEPS = [
   },
   {
     title: "Files",
-    content: "Click '+ New File' in the sidebar to create a file. Double-click a filename to rename it. Files are auto-saved every 5 minutes.",
+    content: "Click '+ New File' in the sidebar to create a file 'ꜛ Import' to bring in existing files, and 'ꜜ Save' to save manually. Double-click a filename to rename it. Files are auto-saved every 5 minutes.",
     icon: "📄",
   },
   {
@@ -36,6 +36,11 @@ const STEPS = [
     title: "AI Assistant",
     content: "Click '✦ AI' in the topbar to open the AI assistant. Add your Anthropic API key in Settings to enable it.",
     icon: "✦",
+  },
+  {
+    title: "Timer & Billing",
+    content: "Click '⏱️ Timer' to track billable house per project. Click '👥 Clients' to manage clients, '📋 Quotes' to build quotes, and '🧾 Invoices' to manage invoices.",
+    icon: "⏱️",
   },
   {
     title: "Focus Mode",

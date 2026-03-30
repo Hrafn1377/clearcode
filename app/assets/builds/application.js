@@ -75721,7 +75721,7 @@ ${e}`;
   };
 
   // app/javascript/components/tutorial.ts
-  var APP_VERSION = "3.0.0";
+  var APP_VERSION = "3.1.0";
   var TUTORIAL_KEY = "clearcode_tutorial_version";
   var STEPS = [
     {
@@ -75736,7 +75736,7 @@ ${e}`;
     },
     {
       title: "Files",
-      content: "Click '+ New File' in the sidebar to create a file. Double-click a filename to rename it. Files are auto-saved every 5 minutes.",
+      content: "Click '+ New File' in the sidebar to create a file '\uA71B Import' to bring in existing files, and '\uA71C Save' to save manually. Double-click a filename to rename it. Files are auto-saved every 5 minutes.",
       icon: "\u{1F4C4}"
     },
     {
@@ -75758,6 +75758,11 @@ ${e}`;
       title: "AI Assistant",
       content: "Click '\u2726 AI' in the topbar to open the AI assistant. Add your Anthropic API key in Settings to enable it.",
       icon: "\u2726"
+    },
+    {
+      title: "Timer & Billing",
+      content: "Click '\u23F1\uFE0F Timer' to track billable house per project. Click '\u{1F465} Clients' to manage clients, '\u{1F4CB} Quotes' to build quotes, and '\u{1F9FE} Invoices' to manage invoices.",
+      icon: "\u23F1\uFE0F"
     },
     {
       title: "Focus Mode",
@@ -76022,6 +76027,22 @@ ${e}`;
       });
       this.showSavedFeedback();
     }
+    async createFileFromImport(name2, content2) {
+      await fetch("/code_files", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": this.csrfToken
+        },
+        body: JSON.stringify({
+          code_file: {
+            name: name2,
+            content: content2,
+            project_id: this.projectFilter || null
+          }
+        })
+      });
+    }
     showSavedFeedback() {
       console.log("[ClearCode] showSavedFeedback called");
       const el5 = document.getElementById("status-cursor");
@@ -76073,6 +76094,7 @@ ${e}`;
       <div class="sidebar-header">
         <button class="btn-new" id="btn-new-file">+ New File</button>
         <button class="btn-save" id="btn-save-file">\u2193 Save</button>
+        <button class="btn-import" id="btn-import-file">\uA71B Import</button>
         <button class="btn-gist" id="btn-backup-gist">\u2601 Gist</button>
       </div>
       <ul class="file-list">
@@ -76091,6 +76113,21 @@ ${e}`;
       });
       document.getElementById("btn-save-file")?.addEventListener("click", () => {
         this.saveCurrentFile();
+      });
+      document.getElementById("btn-import-file")?.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.multiple = true;
+        input.accept = ".js,.ts,.jsx,.tsx,.html,.css,.scss,.json,.md,.rb,.py,.rs,.go,.java,.c,.cpp,.txt";
+        input.addEventListener("change", async () => {
+          const importedFiles = Array.from(input.files || []);
+          for (const file of importedFiles) {
+            const content2 = await file.text();
+            await this.createFileFromImport(file.name, content2);
+          }
+          await this.loadFiles();
+        });
+        input.click();
       });
       document.getElementById("btn-backup-gist")?.addEventListener("click", async () => {
         const token = document.getElementById("settings-github-token")?.value;
