@@ -48,6 +48,15 @@ class InvoicesController < ApplicationController
       disposition: "attachment"
   end
 
+  def export_docx
+    invoice = current_user.invoices.find(params[:id])
+    docx_data = ExportService.invoice_to_docx(invoice)
+    send_data docx_data,
+      filename: "#{invoice.invoice_number}.docx",
+      type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      disposition: "attachment"
+  end
+
   private
 
   def invoice_json(invoice, include_items: false)

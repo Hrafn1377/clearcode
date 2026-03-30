@@ -406,12 +406,13 @@ export class QuotePanel {
         </div>
         <div class="quote-card-detail" style="color:var(--accent-yellow);">Total: $${q.total || '0.00'}</div>
         <div class="quote-card-actions">
-          <button class="btn-edit-quote" data-id="${q.id}">Edit</button>
-          <button class="btn-convert-quote" data-id="${q.id}">→ Invoice</button>
-          <button class="btn-export-pdf-quote" data-id="${q.id}">⬇️ PDF</button>
-          <button class="btn-status-quote" data-id="${q.id}">Status</button>
-          <button class="btn-delete-quote" data-id="${q.id}">Delete</button>
-        </div>
+  <button class="btn-edit-quote" data-id="${q.id}">Edit</button>
+  <button class="btn-convert-quote" data-id="${q.id}">→ Invoice</button>
+  <button class="btn-export-pdf-quote" data-id="${q.id}">↓ PDF</button>
+  <button class="btn-export-docx-quote" data-id="${q.id}">↓ DOCX</button>
+  <button class="btn-status-quote" data-id="${q.id}">Status</button>
+  <button class="btn-delete-quote" data-id="${q.id}">Delete</button>
+</div>
       </div>
     `).join('');
 
@@ -456,6 +457,14 @@ export class QuotePanel {
             window.location.href = `/quotes/${id}/export_pdf`;
         });
      });
+
+     list.querySelectorAll('.btn-export-docx-quote').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = (btn as HTMLElement).dataset.id!;
+    window.location.href = `/quotes/${id}/export_docx`;
+  });
+});
+
 
 
     list.querySelectorAll('.btn-delete-quote').forEach(btn => {

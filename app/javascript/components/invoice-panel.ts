@@ -370,11 +370,13 @@ export class InvoicePanel {
         <div class="invoice-card-detail" style="color:${inv.amount_due > 0 ? 'var(--accent-pink)' : 'var(--accent-green)'};">
           ${inv.amount_due > 0 ? `Due: $${inv.amount_due}` : '✓ Paid'}
         </div>
-       <div class="invoice-card-actions">
+     <div class="invoice-card-actions">
   <button class="btn-edit-invoice" data-id="${inv.id}">Edit</button>
   <button class="btn-export-pdf-invoice" data-id="${inv.id}">↓ PDF</button>
+  <button class="btn-export-docx-invoice" data-id="${inv.id}">↓ DOCX</button>
   <button class="btn-delete-invoice" data-id="${inv.id}">Delete</button>
 </div>
+
       </div>
     `).join('');
 
@@ -404,6 +406,13 @@ export class InvoicePanel {
             window.location.href = `/invoices/${id}/export_pdf`;
         });
     });
+
+    list.querySelectorAll('.btn-export-docx-invoice').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const id = (btn as HTMLElement).dataset.id!;
+    window.location.href = `/invoices/${id}/export_docx`;
+  });
+});
   }
 
   private showForm() {

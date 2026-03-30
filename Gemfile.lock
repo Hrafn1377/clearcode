@@ -95,9 +95,6 @@ GEM
       railties (>= 7.0)
       responders
       warden (~> 1.2.3)
-    docx (0.10.0)
-      nokogiri (~> 1.13, >= 1.13.0)
-      rubyzip (>= 2.0, < 4)
     drb (2.2.3)
     erb (6.0.2)
     erubi (1.13.1)
@@ -285,7 +282,6 @@ DEPENDENCIES
   bootsnap
   debug
   devise
-  docx
   importmap-rails
   jbuilder
   matrix

@@ -88,6 +88,15 @@ def export_pdf
     disposition: "attachment"
 end
 
+def export_docx
+  quote = current_user.quotes.find(params[:id])
+  docx_data = ExportService.quote_to_docx(quote)
+  send_data docx_data,
+    filename: "#{quote.quote_number}.docx",
+    type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    disposition: "attachment"
+end
+
   private
 
   def quote_json(quote, include_items: false)

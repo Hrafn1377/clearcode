@@ -24,12 +24,14 @@ Rails.application.routes.draw do
     member do
       post :convert_to_invoice
       get  :export_pdf
+      get  :export_docx
     end
   end
 
   resources :invoices, only: [:index, :show, :create, :update, :destroy] do
     member do
       get :export_pdf
+      get :export_docx
     end
   end
 
