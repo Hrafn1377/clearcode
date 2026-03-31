@@ -74438,6 +74438,7 @@ ${e}`;
         state,
         parent: host
       });
+      this.view.dom.style.height = "100%";
       this.themeManager.onChange((id3) => {
         this.setTheme(this.themeManager.currentExtension());
       });
@@ -74482,6 +74483,10 @@ ${e}`;
         crosshairCursor(),
         drawSelection(),
         EditorState.allowMultipleSelections.of(true),
+        EditorView.theme({
+          "&": { height: "100%" },
+          ".cm-scroller": { overflow: "auto" }
+        }),
         EditorView.lineWrapping
       ];
     }

@@ -290,10 +290,12 @@
 
     #app-shell {
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: 42px 1fr 28px;
       grid-template-columns: 240px 1fr;
       height: 100dvh;
+      overflow: hidden;
     }
+
 
     #topbar {
       grid-column: 1 / -1;
@@ -344,6 +346,7 @@
       overflow: hidden;
       height: 100%;
       min-height: 0;
+      ma-height: 100%;
     }
 
     #editor-host {
@@ -357,6 +360,12 @@
     #editor-host .cm-editor {
       height: 100%;
     }
+
+    #editor-host .cm-scroller {
+      overflow-y: scroll !important;
+      max-height: calc(100dvh - 70px);
+    }
+
 
     #preview-frame {
       flex: 1;

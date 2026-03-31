@@ -33,6 +33,8 @@ export class ClearCodeEditor {
             state,
             parent: host,
         });
+        this.view.dom.style.height = '100%';
+        
 
         this.themeManager.onChange((id) => {
             this.setTheme(this.themeManager.currentExtension());
@@ -74,6 +76,10 @@ export class ClearCodeEditor {
             crosshairCursor(),
             drawSelection(),
             EditorState.allowMultipleSelections.of(true),
+            EditorView.theme({
+                "&": { height: "100%" },
+                ".cm-scroller": { overflow: "auto" }
+            }),
             EditorView.lineWrapping,
         ];
     }
@@ -113,6 +119,8 @@ export class ClearCodeEditor {
     setOnUpdate(fn: () => void): void {
         this.onUpdateCallback = fn;
     }
+
+
 
     async format(): Promise<void> {
         console.log("[ClearCode] format called");
