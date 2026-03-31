@@ -1,4 +1,9 @@
 <div id="app-shell">
+<% if demo_mode? %>
+  <div style="grid-column:1/-1; background:var(--accent-yellow): color:var(--bg); texxt-align:center; padding:0.3rem; font-size:0.75rem; font-family:var(--font-mono);">
+     ✦ This is a live demo. Download the full version for premium features including time tracking, client management, quotes & invoices.
+  </div>
+<% end %>  
   <div id="topbar">
   <span class="logo">CLEARCODE</span>
   <button id="project-btn" title="Switch Project">
@@ -6,10 +11,12 @@
   </button>
   <button id="git-btn" title="Git">Git</button>
   <button id="ai-btn" title="AI Assistant">✦ AI</button>
+<% unless demo_mode? %>
   <button id="timer-btn" title="Timer">⏱ Timer</button>
   <button id="client-btn" title="Clients">👥 Clients</button>
   <button id="quote-btn" title="Quotes">📋 Quotes</button>
   <button id="invoice-btn" title="Invoices">🧾 Invoices</button>
+<% end %>
   <button id="preview-btn" title="Live Preview">⬡ Preview</button>
   <button id="split-btn" title="Split Editor">⫠ Split</button>
   <button id="focus-btn" title="Focus Mode">⊡</button>

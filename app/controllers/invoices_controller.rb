@@ -59,6 +59,17 @@ class InvoicesController < ApplicationController
 
   private
 
+  before_action :check_demo_mode
+
+private
+
+def check_demo_mode
+  if demo_mode?
+    render json: { error: "Not available in demo mode" }, status: :forbidden
+  end
+end
+
+
   def invoice_json(invoice, include_items: false)
     data = {
       id: invoice.id,

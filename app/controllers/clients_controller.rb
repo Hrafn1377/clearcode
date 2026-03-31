@@ -49,6 +49,17 @@ class ClientsController < ApplicationController
 
   private
 
+  before_action :check_demo_mode
+
+private
+
+def check_demo_mode
+  if demo_mode?
+    render json: { error: "Not available in demo mode" }, status: :forbidden
+  end
+end
+
+
   def client_params
     params.require(:client).permit(
       :name, :company, :email, :phone, :address,

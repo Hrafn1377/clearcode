@@ -1,6 +1,19 @@
 class TimerEntriesController < ApplicationController
   before_action :authenticate_user!
 
+  private
+    
+  before_action :check_demo_mode
+
+private
+
+def check_demo_mode
+  if demo_mode?
+    render json: { error: "Not available in demo mode" }, status: :forbidden
+  end
+end
+
+
   def create
     project = current_user.timer_projects.find(params[:project_id])
 

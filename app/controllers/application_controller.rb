@@ -16,4 +16,9 @@ class ApplicationController < ActionController::Base
   def check_first_run
     redirect_to setup_path if setup_required? && controller_name != "setup"
   end
+
+  def demo_mode?
+    ENV['CLEARCODE_DEMO'] == 'true'
+  end
+  helper_method :demo_mode?
 end
