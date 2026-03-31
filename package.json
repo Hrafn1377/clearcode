@@ -1,6 +1,6 @@
 {
   "name": "clearcode",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Accessible code editor. Synthwave soul, colorblind-first design.",
   "scripts": {
     "build": "esbuild app/javascript/application.ts --bundle --outdir=app/assets/builds --public-path=/assets --loader:.ttf=file --loader:.woff2=file",
